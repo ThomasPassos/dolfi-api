@@ -4,7 +4,6 @@ import os
 import requests
 
 BLOCKSTREAM_API_URL = os.environ.get("BLOCKSTREAM_API_URL")
-MAX_TRANSACTIONS_PER_PAGE = 25
 logger = logging.getLogger(__name__)
 
 
@@ -44,7 +43,7 @@ class BlockchainService:
             txs.extend(batch)
 
             # Se o lote for menor que 25, consideramos que é a última página.
-            if len(batch) < MAX_TRANSACTIONS_PER_PAGE:
+            if len(batch) < 25:
                 break
 
             last_txid = batch[-1]["txid"]
