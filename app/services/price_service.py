@@ -12,7 +12,8 @@ lock = threading.Lock()
 
 
 class PriceService:
-    def get_bitcoin_price(self, date: datetime) -> float:
+    @staticmethod
+    def get_bitcoin_price(date: datetime) -> float:
         key = date.strftime("%Y-%m-%d")
         with lock:
             if key in price_cache:
