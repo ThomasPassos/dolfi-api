@@ -1,0 +1,25 @@
+[project]
+name = "d0lfi"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Thomas Passos",email = "tm123br@live.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12,<4.0"
+dependencies = [
+    "flask (>=3.1.0,<4.0.0)",
+    "flask-sqlalchemy (>=3.1.1,<4.0.0)",
+    "flask-apscheduler (>=1.13.1,<2.0.0)",
+    "requests (>=2.32.3,<3.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.11.2"
+taskipy = "^1.14.1"
+
