@@ -24,3 +24,20 @@ build-backend = "poetry.core.masonry.api"
 ruff = "^0.11.2"
 taskipy = "^1.14.1"
 
+[tool.ruff]
+line-length = 88
+extend-exclude = ['static']
+
+[tool.ruff.lint]
+preview = true
+select = ["I", "F", "E", "W", "PL", "D"]
+
+[tool.ruff.format]
+preview = true
+quote-style = "double"
+
+[tool.taskipy.tasks]
+run = "flask run"
+lint = "ruff check . ; ruff check . --diff"
+format = "ruff check . --fix ; ruff format ."
+commit = "git add . ; git commit -a -m"

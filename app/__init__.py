@@ -1,13 +1,16 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_apscheduler import APScheduler
+from dotenv import load_dotenv
+import os 
 
+load_dotenv()
 db = SQLAlchemy()
 scheduler = APScheduler()
 
 def create_app(config_object=None):
     app = Flask(__name__)
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("SQLALCHEMY_DATABASE")
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     app.config['SCHEDULER_API_ENABLED'] = True
