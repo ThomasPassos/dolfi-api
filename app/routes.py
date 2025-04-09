@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify
+
 from app import db
-from app.models import Wallet, Transaction
+from app.models import Transaction, Wallet
 from app.services.calculation_service import CalculationService
 
 bp = Blueprint("wallet", __name__)

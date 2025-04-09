@@ -25,12 +25,12 @@ ruff = "^0.11.2"
 taskipy = "^1.14.1"
 
 [tool.ruff]
-line-length = 88
+line-length = 100
 extend-exclude = ['static']
 
 [tool.ruff.lint]
 preview = true
-select = ["I", "F", "E", "W", "PL", "D"]
+select = ["I", "F", "E", "W", "PL"]
 
 [tool.ruff.format]
 preview = true

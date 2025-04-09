@@ -1,12 +1,16 @@
-import requests
-import logging 
+import logging
 import os
 
+import requests
+
 BLOCKSTREAM_API_URL = os.environ.get("BLOCKSTREAM_API_URL")
+MAX_TRANSACTIONS_PER_PAGE = 25
 logger = logging.getLogger(__name__)
 
+
 class BlockchainService:
-    def get_wallet_info(self, address):
+    @staticmethod
+    def get_wallet_info(address):
         url = f"{BLOCKSTREAM_API_URL}/address/{address}"
         try:
             r = requests.get(url, timeout=10)
@@ -16,7 +20,8 @@ class BlockchainService:
             logger.error(f"Erro ao obter info da carteira {address}: {e}")
             return None
 
-    def get_all_transactions(self, address):
+    @staticmethod
+    def get_all_transactions(address):
         txs = []
         last_txid = None
         iterations = 0
@@ -39,10 +44,10 @@ class BlockchainService:
             txs.extend(batch)
 
             # Se o lote for menor que 25, consideramos que é a última página.
-            if len(batch) < 25:
+            if len(batch) < MAX_TRANSACTIONS_PER_PAGE:
                 break
 
-            last_txid = batch[-1]['txid']
+            last_txid = batch[-1]["txid"]
             iterations += 1
 
         if iterations == max_iterations:

@@ -1,7 +1,9 @@
-from app import db
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from typing import List, Optional
 from datetime import datetime
+from typing import List, Optional
+
+from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from app import db
 
 
 class Wallet(db.Model):
