@@ -6,7 +6,7 @@ from app.services.calculation_service import CalculationService
 bp = Blueprint("wallet", __name__)
 
 
-@bp.route("/<str:address>", methods=["GET"])
+@bp.route("/<string:address>", methods=["GET"])
 def get_wallet(address):
     wallet = Wallet.query.filter_by(address=address).first()
     if not wallet:
@@ -15,7 +15,7 @@ def get_wallet(address):
     transactions = [
         {
             "transaction_id": tx.transaction_id,
-            "transaction_date": tx.transaction_date.isoformat(),
+            "transaction_date": tx.transaction_date.strftime("%d/%m/%Y"),
             "balance_btc": tx.balance_btc,
             "balance_usd": tx.balance_usd,
             "in": tx.tx_in,
@@ -29,15 +29,15 @@ def get_wallet(address):
         "balance_usd": wallet.balance_usd,
         "transaction_count": wallet.transaction_count,
         "roa": wallet.roa,
-        "first_transaction_date": wallet.first_transaction_date.isoformat()
+        "first_transaction_date": wallet.first_transaction_date.strftime("%d/%m/%Y")
         if wallet.first_transaction_date
-        else None,
+        else "Sem registro",
         "transactions": transactions,
     }
     return jsonify(data), 200
 
 
-@bp.route("/<str:address>", methods=["POST"])
+@bp.route("/<string:address>", methods=["POST"])
 def add_wallet(address):
     wallet = Wallet.query.filter_by(address=address).first()
     if wallet:
@@ -73,7 +73,7 @@ def add_wallet(address):
     return jsonify({"message": "Carteira inserida e dados calculados."}), 201
 
 
-@bp.route("/<str:address>", methods=["DELETE"])
+@bp.route("/<string:address>", methods=["DELETE"])
 def delete_wallet(address):
     wallet = Wallet.query.filter_by(address=address).first()
     if not wallet:
