@@ -41,9 +41,5 @@ class BlockchainService:
 
             txs.extend(batch)
 
-            # Se o lote for menor que 25, consideramos que é a última página.
-            if len(batch) < 25:
-                break
-
             last_txid = batch[-1]["txid"]
         return txs
