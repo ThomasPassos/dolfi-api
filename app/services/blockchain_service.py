@@ -40,6 +40,5 @@ class BlockchainService:
                 break
 
             txs.extend(batch)
-
             last_txid = batch[-1]["txid"]
         return txs
