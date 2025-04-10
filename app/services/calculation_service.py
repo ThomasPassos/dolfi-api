@@ -2,6 +2,8 @@ import logging
 from datetime import datetime
 from typing import Any
 
+from app import db
+from app.models import Transaction, Wallet
 from app.services.blockchain_service import BlockchainService
 from app.services.price_service import PriceService
 
@@ -49,7 +51,7 @@ class CalculationService:
             "txid": tx.get("txid"),
         }
 
-    def calculate_wallet_data(self, address: str) -> dict[str]:
+    def calculate_wallet_data(self, address: str) -> tuple[dict[str], list[dict[str:Any]]]:
         wallet_info = self.blockchain.get_wallet_info(address)
         if not wallet_info:
             logger.error(f"Informações da Wallet não encontradas para o endereço {address}")
@@ -103,42 +105,84 @@ class CalculationService:
         }
         return wallet_data, processed_txs
 
-    def update_wallet(self, wallet):
+    def calculate_from_transactions(self, wallet: Wallet):
+        invested_usd = 0
+        returned_usd = 0
+        balance_btc = 0
+
+        for tx in wallet.transactions:
+            balance_btc += tx.balance_btc
+            if tx.balance_btc > 0:
+                invested_usd += abs(tx.balance_usd)
+            else:
+                returned_usd += abs(tx.balance_usd)
+
+        current_price = self.prices.get_bitcoin_price(datetime.now())
+        logger.warning(f"Preço atual do BTC retornado como {current_price} para {wallet.address}")
+        balance_usd = balance_btc * current_price
+
+        if invested_usd > 0:
+            roa = (balance_usd + returned_usd - invested_usd) / invested_usd * 100
+        else:
+            roa = 0
+            logger.warning(f"ROA zerado: invested_usd = {invested_usd}")
+
+        return {
+            "balance_btc": balance_btc,
+            "balance_usd": balance_usd,
+            "roa": roa,
+        }
+
+    def update_wallet(self, wallet: Wallet):
         wallet_info = self.blockchain.get_wallet_info(wallet.address)
         if not wallet_info:
-            logger.error(f"Wallet info não encontrada para atualizar {wallet.address}")
+            logger.error(f"Informações da Wallet não encontradas para atualizar {wallet.address}")
             return
 
-        txs = self.blockchain.get_all_transactions(wallet.address)
-        current_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", 0)
+        current_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", None)
         has_new = current_tx_count > wallet.transaction_count
 
         if has_new:
-            wallet_data, processed_txs = self.calculate_wallet_data(wallet.address)
-            if not wallet_data:
+            txs = self.blockchain.get_all_transactions(wallet.address)
+            if not txs:
+                logger.error(f"Nenhuma transação encontrada para {wallet.address}")
                 return
 
+            processed_txs = []
+            stored_txids = {tx.transaction_id for tx in wallet.transactions}
+
+            for tx in txs:
+                processed = self.process_transaction(tx, wallet.address)
+                if not processed:
+                    continue
+                processed_txs.append(processed)
+                if processed["txid"] not in stored_txids:
+                    transaction = Transaction(
+                        transaction_id=processed["txid"],
+                        wallet_address=wallet.address,
+                        transaction_date=processed["transaction_date"],
+                        balance_btc=processed["balance_btc"],
+                        balance_usd=processed["balance_usd"],
+                        tx_in=processed["tx_in"],
+                    )
+                    db.session.add(transaction)
+
+            if current_tx_count is None:
+                current_tx_count = len(wallet.transactions)
+
+            wallet_data = self.calculate_from_transactions(wallet)
             wallet.balance_btc = wallet_data["balance_btc"]
             wallet.balance_usd = wallet_data["balance_usd"]
-            wallet.transaction_count = wallet_data["transaction_count"]
             wallet.roa = wallet_data["roa"]
-            if wallet.first_transaction_date is None and wallet_data["first_transaction_date"]:
-                wallet.first_transaction_date = wallet_data["first_transaction_date"]
+            wallet.transaction_count = current_tx_count
 
-            stored_txids = {tx.transaction_id for tx in wallet.transactions}
-            for tx in processed_txs:
-                if tx["txid"] not in stored_txids:
-                    yield tx
         else:
-            current_price = self.prices.get_bitcoin_price(datetime.now())
-            wallet.balance_usd = wallet.balance_btc * current_price
+            wallet_data = self.calculate_from_transactions(wallet)
+            wallet.balance_usd = wallet_data["balance_usd"]
+            wallet.roa = wallet_data["roa"]
 
-            # Recalcula ROA com base nos dados atuais (sem refetchar todas as transações)
-            (
-                _,
-                _processed_txs_listed_only_for_roa_calc_needed_here_if_not_stored_elsewhere_,
-            ) = _self.calculate_wallet_data(wallet.address)
-            (
-                _,
-                _processed_txs_listed_only_for_roa_calc_needed_here_if_not_stored_elsewhere_,
-            ) = _self.calculate_wallet_data(wallet.address)
+        try:
+            db.session.commit()
+        except Exception as e:
+            logger.error(f"Erro ao atualizar carteira {wallet.address}: {e}")
+            db.session.rollback()
