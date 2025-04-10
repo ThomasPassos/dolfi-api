@@ -52,7 +52,7 @@ class CalculationService:
     def calculate_wallet_data(self, address: str) -> dict[str]:
         wallet_info = self.blockchain.get_wallet_info(address)
         if not wallet_info:
-            logger.error(f"Wallet info não encontrada para o endereço {address}")
+            logger.error(f"Informações da Wallet não encontradas para o endereço {address}")
             return None, None
 
         txs = self.blockchain.get_all_transactions(address)
@@ -88,11 +88,11 @@ class CalculationService:
         balance_usd = balance_btc * current_price
 
         # Cálculo do ROA: se invested_usd > 0, senão ROA=0 para evitar divisão por zero
-        roa = (
-            ((balance_usd + returned_usd - invested_usd) / invested_usd * 100)
-            if invested_usd > 0
-            else 0
-        )
+        if invested_usd > 0:
+            roa = (balance_usd + returned_usd - invested_usd) / invested_usd * 100
+        else:
+            roa = 0
+            logger.warning(f"ROA zerado: invested_usd = {invested_usd}")
 
         wallet_data = {
             "balance_btc": balance_btc,
