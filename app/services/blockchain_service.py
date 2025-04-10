@@ -24,7 +24,7 @@ class BlockchainService:
         txs = []
         last_txid = None
         iterations = 0
-        max_iterations = 100  # Limite máximo de iterações para proteção
+        max_iterations = 200  # Limite máximo de iterações para proteção
         while iterations < max_iterations:
             url = f"{BLOCKSTREAM_API_URL}/address/{address}/txs/chain"
             if last_txid:
