@@ -14,10 +14,6 @@ class CalculationService:
         self.prices = PriceService()
 
     def process_transaction(self, tx: dict[str:Any], address: str) -> dict[str:Any]:
-        # Apenas transações confirmadas possuem block_time
-        if "status" not in tx or "block_time" not in tx["status"]:
-            return None
-
         try:
             tx_date = datetime.fromtimestamp(tx["status"]["block_time"])
         except Exception as e:
