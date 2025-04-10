@@ -16,7 +16,7 @@ def get_wallet(address):
     transactions = [
         {
             "transaction_id": tx.transaction_id,
-            "transaction_date": tx.transaction_date.strftime("%d/%m/%Y"),
+            "transaction_date": tx.transaction_date.strftime("%d/%m/%Y, %H:%M:%S"),
             "balance_btc": tx.balance_btc,
             "balance_usd": tx.balance_usd,
             "in": tx.tx_in,
@@ -30,7 +30,7 @@ def get_wallet(address):
         "balance_usd": wallet.balance_usd,
         "transaction_count": wallet.transaction_count,
         "roa": wallet.roa,
-        "first_transaction_date": wallet.first_transaction_date.strftime("%d/%m/%Y")
+        "first_transaction_date": wallet.first_transaction_date.strftime("%d/%m/%Y, %H:%M:%S")
         if wallet.first_transaction_date
         else "Sem registro",
         "transactions": transactions,
