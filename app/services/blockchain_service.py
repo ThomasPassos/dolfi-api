@@ -19,6 +19,7 @@ class BlockchainService:
             logger.error(f"Erro ao obter info da carteira {address}: {e}")
             return None
 
+    # TODO: Testar o que acontece na iteração seguinte a última página.
     @staticmethod
     def get_all_transactions(address):
         txs = []
