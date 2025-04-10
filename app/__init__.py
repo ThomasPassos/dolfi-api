@@ -15,7 +15,7 @@ scheduler = APScheduler()
 
 def create_app(config_object=None):
     app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("SQLALCHEMY_DATABASE")
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
     app.config["SCHEDULER_API_ENABLED"] = True

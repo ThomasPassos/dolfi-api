@@ -4,8 +4,8 @@ from datetime import datetime
 
 import requests
 
-CRYPTOCOMPARE_API_KEY = os.environ.get("CRYPTOCOMPARE_API_KEY")
-CRYPTOCOMPARE_API_URL = os.environ.get("CRYPTOCOMPARE_API_URL")
+CRYPTOCOMPARE_API_KEY = os.getenv("CRYPTOCOMPARE_API_KEY")
+CRYPTOCOMPARE_API_URL = os.getenv("CRYPTOCOMPARE_API_URL")
 
 price_cache = {}
 lock = threading.Lock()

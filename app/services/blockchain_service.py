@@ -3,7 +3,7 @@ import os
 
 import requests
 
-BLOCKSTREAM_API_URL = os.environ.get("BLOCKSTREAM_API_URL")
+BLOCKSTREAM_API_URL = os.getenv("BLOCKSTREAM_API_URL")
 logger = logging.getLogger(__name__)
 
 
