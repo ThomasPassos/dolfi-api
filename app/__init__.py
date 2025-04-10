@@ -5,9 +5,6 @@ from flask import Flask
 from flask_apscheduler import APScheduler
 from flask_sqlalchemy import SQLAlchemy
 
-from app.routes import bp as wallet_bp
-from app.tasks import update_wallets_job
-
 load_dotenv()
 db = SQLAlchemy()
 scheduler = APScheduler()
@@ -28,7 +25,11 @@ def create_app(config_object=None):
     scheduler.init_app(app)
     scheduler.start()
 
+    from app.routes import bp as wallet_bp  # noqa: PLC0415
+
     app.register_blueprint(wallet_bp)
+
+    from app.tasks import update_wallets_job  # noqa: PLC0415
 
     scheduler.add_job(id="update_wallets", func=update_wallets_job, trigger="interval", minutes=10)
 

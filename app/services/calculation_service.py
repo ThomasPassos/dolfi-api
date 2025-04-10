@@ -2,7 +2,8 @@ import logging
 from datetime import datetime
 from typing import Any
 
-from app import db
+from flask_sqlalchemy import SQLAlchemy
+
 from app.models import Transaction, Wallet
 from app.services.blockchain_service import BlockchainService
 from app.services.price_service import PriceService
@@ -133,7 +134,7 @@ class CalculationService:
             "roa": roa,
         }
 
-    def update_wallet(self, wallet: Wallet):
+    def update_wallet(self, wallet: Wallet, db: SQLAlchemy) -> None:
         wallet_info = self.blockchain.get_wallet_info(wallet.address)
         if not wallet_info:
             logger.error(f"Informações da Wallet não encontradas para atualizar {wallet.address}")

@@ -1,6 +1,6 @@
 import logging
 
-from app import create_app
+from app import create_app, db
 from app.models import Wallet
 from app.services.calculation_service import CalculationService
 
@@ -15,5 +15,6 @@ def update_wallets_job():
         for wallet in wallets:
             wallet_info = calc_service.blockchain.get_wallet_info(wallet.address)
             if not wallet_info:
-                logger.error(f"Informações da Wallet não encontradas para {wallet.address}")
+                logger.error(f"Wallet info não encontrada para {wallet.address}")
                 continue
+            calc_service.update_wallet(wallet, db)
