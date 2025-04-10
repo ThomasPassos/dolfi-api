@@ -19,17 +19,15 @@ class BlockchainService:
             logger.error(f"Erro ao obter info da carteira {address}: {e}")
             return None
 
-    # TODO: Testar o que acontece na iteração seguinte a última página.
     @staticmethod
     def get_all_transactions(address):
         txs = []
         last_txid = None
-        iterations = 0
-        max_iterations = 200  # Limite máximo de iterações para proteção
-        while iterations < max_iterations:
+        while True:
             url = f"{BLOCKSTREAM_API_URL}/address/{address}/txs/chain"
             if last_txid:
                 url += f"/{last_txid}"
+
             try:
                 r = requests.get(url, timeout=10)
                 r.raise_for_status()
@@ -48,8 +46,4 @@ class BlockchainService:
                 break
 
             last_txid = batch[-1]["txid"]
-            iterations += 1
-
-        if iterations == max_iterations:
-            logger.warning("Limite máximo de iterações atingido ao obter transações.")
         return txs
