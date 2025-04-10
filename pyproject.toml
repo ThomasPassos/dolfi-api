@@ -27,10 +27,10 @@ taskipy = "^1.14.1"
 [tool.ruff]
 line-length = 100
 extend-exclude = ['static']
-ignore = ["PLR2004"]
 
 [tool.ruff.lint]
 preview = true
+ignore = ["PLR2004"]
 select = ["I", "F", "E", "W", "PL"]
 
 [tool.ruff.format]

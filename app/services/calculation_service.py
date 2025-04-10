@@ -1,5 +1,6 @@
 import logging
 from datetime import datetime
+from typing import Any
 
 from app.services.blockchain_service import BlockchainService
 from app.services.price_service import PriceService
@@ -12,7 +13,7 @@ class CalculationService:
         self.blockchain = BlockchainService()
         self.prices = PriceService()
 
-    def process_transaction(self, tx, address):
+    def process_transaction(self, tx: dict[str:Any], address: str) -> dict[str:Any]:
         # Apenas transações confirmadas possuem block_time
         if "status" not in tx or "block_time" not in tx["status"]:
             return None
@@ -52,7 +53,7 @@ class CalculationService:
             "txid": tx.get("txid"),
         }
 
-    def calculate_wallet_data(self, address):
+    def calculate_wallet_data(self, address: str) -> dict[str]:
         wallet_info = self.blockchain.get_wallet_info(address)
         if not wallet_info:
             logger.error(f"Wallet info não encontrada para o endereço {address}")
@@ -68,9 +69,7 @@ class CalculationService:
         returned_usd = 0
 
         # Data da primeira transação (mais antiga)
-        first_tx_date = (
-            datetime.fromtimestamp(txs[-1]["status"]["block_time"]) if txs else None
-        )
+        first_tx_date = datetime.fromtimestamp(txs[-1]["status"]["block_time"]) if txs else None
 
         # Processa apenas transações confirmadas
         for tx in txs:
@@ -84,9 +83,7 @@ class CalculationService:
             else:
                 returned_usd += abs(processed["balance_usd"])
 
-        wallet_tx_count = wallet_info.get("chain_stats", {}).get(
-            "tx_count", len(processed_txs)
-        )
+        wallet_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", len(processed_txs))
         funded = wallet_info.get("chain_stats", {}).get("funded_txo_sum", 0) / 1e8
         spent = wallet_info.get("chain_stats", {}).get("spent_txo_sum", 0) / 1e8
         balance_btc = funded - spent
@@ -129,10 +126,7 @@ class CalculationService:
             wallet.balance_usd = wallet_data["balance_usd"]
             wallet.transaction_count = wallet_data["transaction_count"]
             wallet.roa = wallet_data["roa"]
-            if (
-                wallet.first_transaction_date is None
-                and wallet_data["first_transaction_date"]
-            ):
+            if wallet.first_transaction_date is None and wallet_data["first_transaction_date"]:
                 wallet.first_transaction_date = wallet_data["first_transaction_date"]
 
             stored_txids = {tx.transaction_id for tx in wallet.transactions}

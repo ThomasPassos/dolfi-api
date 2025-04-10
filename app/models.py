@@ -22,9 +22,7 @@ class Wallet(db.Model):
 class Transaction(db.Model):
     __tablename__ = "transaction"
     transaction_id: Mapped[str] = mapped_column(primary_key=True)
-    wallet_address: Mapped[str] = mapped_column(
-        db.ForeignKey("wallet.address"), nullable=False
-    )
+    wallet_address: Mapped[str] = mapped_column(db.ForeignKey("wallet.address"), nullable=False)
     transaction_date: Mapped[datetime] = mapped_column(nullable=False)
     balance_btc: Mapped[float] = mapped_column(default=0)
     balance_usd: Mapped[float] = mapped_column(default=0)

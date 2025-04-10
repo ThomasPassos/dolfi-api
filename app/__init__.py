@@ -30,9 +30,7 @@ def create_app(config_object=None):
 
     app.register_blueprint(wallet_bp)
 
-    scheduler.add_job(
-        id="update_wallets", func=update_wallets_job, trigger="interval", minutes=10
-    )
+    scheduler.add_job(id="update_wallets", func=update_wallets_job, trigger="interval", minutes=10)
 
     with app.app_context():
         db.create_all()
