@@ -1,9 +1,10 @@
 from datetime import datetime
 from typing import List, Optional
 
+from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app import db
+db = SQLAlchemy()
 
 
 class Wallet(db.Model):

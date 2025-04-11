@@ -2,12 +2,11 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask
-from flask_apscheduler import APScheduler
-from flask_sqlalchemy import SQLAlchemy
+
+from app.models import db
+from app.tasks import scheduler
 
 load_dotenv()
-db = SQLAlchemy()
-scheduler = APScheduler()
 
 
 def create_app(config_object=None):

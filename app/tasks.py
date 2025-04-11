@@ -1,9 +1,12 @@
 import logging
 
+from flask_apscheduler import APScheduler
+
 from app import create_app, db
 from app.models import Wallet
 from app.services.calculation_service import CalculationService
 
+scheduler = APScheduler()
 logger = logging.getLogger(__name__)
 
 
