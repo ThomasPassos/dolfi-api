@@ -2,17 +2,16 @@ import logging
 
 from flask_apscheduler import APScheduler
 
-from app import create_app
 from app.models import Wallet, db
 from app.services.calculation_service import CalculationService
 
-scheduler = APScheduler()
 logger = logging.getLogger(__name__)
+scheduler = APScheduler()
 
 
+@scheduler.task("interval", id="update_wallets", minutes=10)
 def update_wallets_job():
-    app = create_app()
-    with app.app_context():
+    with scheduler.app.app_context():
         calc_service = CalculationService()
         wallets = Wallet.query.all()
         for wallet in wallets:

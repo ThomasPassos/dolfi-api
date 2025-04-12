@@ -24,15 +24,14 @@ def create_app(config_object=None):
     from app.tasks import scheduler  # noqa: PLC0415
 
     scheduler.init_app(app)
+
+    from app.tasks import update_wallets_job  # noqa: F401, PLC0415
+
     scheduler.start()
 
     from app.routes import bp as wallet_bp  # noqa: PLC0415
 
     app.register_blueprint(wallet_bp)
-
-    from app.tasks import update_wallets_job  # noqa: PLC0415
-
-    scheduler.add_job(id="update_wallets", func=update_wallets_job, trigger="interval", minutes=10)
 
     with app.app_context():
         db.create_all()
