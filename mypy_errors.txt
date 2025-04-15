@@ -3,6 +3,7 @@ app/ext/models.py:4: error: Cannot find implementation or library stub for modul
 app/ext/models.py:5: error: Cannot find implementation or library stub for module named "sqlalchemy.orm"  [import-not-found]
 app/ext/models.py:10: error: Name "db.Model" is not defined  [name-defined]
 app/ext/models.py:24: error: Name "db.Model" is not defined  [name-defined]
+app/services/utils.py:5: error: Cannot find implementation or library stub for module named "flask"  [import-not-found]
 app/services/blockchain_service.py:4: error: Library stubs not installed for "requests"  [import-untyped]
 app/services/blockchain_service.py:4: note: Hint: "python3 -m pip install types-requests"
 app/services/blockchain_service.py:4: note: (or run "mypy --install-types" to install all missing stub packages)
@@ -30,4 +31,5 @@ app/ext/tasks.py:3: error: Cannot find implementation or library stub for module
 app/__init__.py:3: error: Cannot find implementation or library stub for module named "dotenv"  [import-not-found]
 app/__init__.py:3: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
 app/__init__.py:4: error: Cannot find implementation or library stub for module named "flask"  [import-not-found]
-Found 27 errors in 8 files (checked 8 source files)
+app/__init__.py:5: error: Cannot find implementation or library stub for module named "flask_talisman"  [import-not-found]
+Found 29 errors in 9 files (checked 9 source files)

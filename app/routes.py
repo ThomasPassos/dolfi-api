@@ -5,12 +5,14 @@ from flask import Blueprint, jsonify
 from app.ext.models import Wallet, db
 from app.ext.schemas import WalletSchema
 from app.services.calculation_service import CalculationService
+from app.services.utils import require_api_key
 
 bp = Blueprint("wallet", __name__)
 logger = logging.getLogger(__name__)
 
 
 @bp.get("/<string:address>")
+@require_api_key
 def get_wallet(address):
     wallet = Wallet.query.filter_by(address=address).first()
     if not wallet:
@@ -20,6 +22,7 @@ def get_wallet(address):
 
 
 @bp.post("/<string:address>")
+@require_api_key
 def add_wallet(address):
     wallet = Wallet.query.filter_by(address=address).first()
     if wallet:
@@ -46,6 +49,7 @@ def add_wallet(address):
 
 
 @bp.delete("/<string:address>")
+@require_api_key
 def delete_wallet(address):
     wallet = Wallet.query.filter_by(address=address).first()
     if not wallet:

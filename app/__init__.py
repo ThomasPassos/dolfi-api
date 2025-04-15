@@ -30,7 +30,7 @@ def create_app(config_object=None):
 
     scheduler.init_app(app)
 
-    from app.ext.tasks import update_wallets_job  # noqa: F401
+    # from app.ext.tasks import update_wallets_job  # noqa: F401
 
     scheduler.start()
 
