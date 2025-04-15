@@ -14,6 +14,7 @@ class Wallet(db.Model):
     balance_usd: Mapped[float] = mapped_column(default=0)
     transaction_count: Mapped[int] = mapped_column(default=0)
     roa: Mapped[float] = mapped_column(default=0)
+    # btc_val: Mapped[float] = mapped_column(default=0)
     first_transaction_date: Mapped[Optional[datetime]] = mapped_column()
     transactions: Mapped[List["Transaction"]] = relationship(
         "Transaction", back_populates="wallet", cascade="all, delete-orphan"

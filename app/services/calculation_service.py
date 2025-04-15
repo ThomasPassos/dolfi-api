@@ -4,7 +4,8 @@ from typing import Any
 
 from flask_sqlalchemy import SQLAlchemy
 
-from app.models import Transaction, Wallet
+from app.models import Wallet
+from app.schemas import TransactionSchema, WalletSchema
 from app.services.blockchain_service import BlockchainService
 from app.services.price_service import PriceService
 
@@ -15,6 +16,8 @@ class CalculationService:
     def __init__(self):
         self.blockchain = BlockchainService()
         self.prices = PriceService()
+        self.tx_schema = TransactionSchema()
+        self.wallet_schema = WalletSchema()
 
     def process_transaction(self, tx: dict[str:Any], address: str) -> dict[str:Any]:
         try:
@@ -45,11 +48,12 @@ class CalculationService:
         tx_in = True if net_btc >= 0 else False
 
         return {
+            "address": address,
             "transaction_date": tx_date,
             "balance_btc": net_btc,
             "balance_usd": net_usd,
             "tx_in": tx_in,
-            "txid": tx.get("txid"),
+            "transaction_id": tx.get("txid"),
         }
 
     def calculate_wallet_data(self, address: str) -> tuple[dict[str], list[dict[str:Any]]]:
@@ -98,6 +102,7 @@ class CalculationService:
             logger.warning(f"ROA zerado: invested_usd = {invested_usd}")
 
         wallet_data = {
+            "address": address,
             "balance_btc": balance_btc,
             "balance_usd": balance_usd,
             "transaction_count": wallet_tx_count,
@@ -140,8 +145,14 @@ class CalculationService:
             logger.error(f"Informações da Wallet não encontradas para atualizar {wallet.address}")
             return
 
+        wallet_data = self.calculate_from_transactions(wallet)
         current_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", None)
         has_new = current_tx_count > wallet.transaction_count
+
+        if current_tx_count is None:
+            logger.warning(f"Wallet {wallet.address} sem número de transações!")
+            current_tx_count = len(wallet.transactions)
+        wallet_data["transaction_count"] = current_tx_count
 
         if has_new:
             txs = self.blockchain.get_all_transactions(wallet.address)
@@ -153,35 +164,14 @@ class CalculationService:
             stored_txids = {tx.transaction_id for tx in wallet.transactions}
 
             for tx in txs:
-                processed = self.process_transaction(tx, wallet.address)
-                if not processed:
+                processed_tx = self.process_transaction(tx, wallet.address)
+                if not processed_tx:
                     continue
-                processed_txs.append(processed)
-                if processed["txid"] not in stored_txids:
-                    transaction = Transaction(
-                        transaction_id=processed["txid"],
-                        wallet_address=wallet.address,
-                        transaction_date=processed["transaction_date"],
-                        balance_btc=processed["balance_btc"],
-                        balance_usd=processed["balance_usd"],
-                        tx_in=processed["tx_in"],
-                    )
-                    db.session.add(transaction)
+                processed_txs.append(processed_tx)
+                if processed_tx["transaction_id"] not in stored_txids:
+                    self.tx_schema.load(processed_tx, session=db.session)
 
-            if current_tx_count is None:
-                current_tx_count = len(wallet.transactions)
-
-            wallet_data = self.calculate_from_transactions(wallet)
-            wallet.balance_btc = wallet_data["balance_btc"]
-            wallet.balance_usd = wallet_data["balance_usd"]
-            wallet.roa = wallet_data["roa"]
-            wallet.transaction_count = current_tx_count
-
-        else:
-            wallet_data = self.calculate_from_transactions(wallet)
-            wallet.balance_usd = wallet_data["balance_usd"]
-            wallet.roa = wallet_data["roa"]
-
+            self.wallet_schema.load(wallet_data, instance=wallet, partial=True, session=db.session)
         try:
             db.session.commit()
         except Exception as e:

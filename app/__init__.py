@@ -17,19 +17,23 @@ def create_app(config_object=None):
     if config_object:
         app.config.from_object(config_object)
 
-    from app.models import db  # noqa: PLC0415
+    from app.models import db
 
     db.init_app(app)
 
-    from app.tasks import scheduler  # noqa: PLC0415
+    from app.schemas import ma
+
+    ma.init_app(app)
+
+    from app.tasks import scheduler
 
     scheduler.init_app(app)
 
-    from app.tasks import update_wallets_job  # noqa: F401, PLC0415
+    from app.tasks import update_wallets_job  # noqa: F401
 
     scheduler.start()
 
-    from app.routes import bp as wallet_bp  # noqa: PLC0415
+    from app.routes import bp as wallet_bp
 
     app.register_blueprint(wallet_bp)
 

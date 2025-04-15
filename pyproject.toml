@@ -13,7 +13,9 @@ dependencies = [
     "flask-apscheduler (>=1.13.1,<2.0.0)",
     "requests (>=2.32.3,<3.0.0)",
     "python-dotenv (>=1.1.0,<2.0.0)",
-    "taskipy (>=1.14.1,<2.0.0)"
+    "taskipy (>=1.14.1,<2.0.0)",
+    "flask-marshmallow (>=1.3.0,<2.0.0)",
+    "marshmallow-sqlalchemy (>=1.4.2,<2.0.0)"
 ]
 
 
@@ -31,7 +33,7 @@ extend-exclude = ['static']
 
 [tool.ruff.lint]
 preview = true
-ignore = ["PLR2004"]
+ignore = ["PLR2004", "PLC0415"]
 select = ["I", "F", "E", "W", "PL"]
 
 [tool.ruff.format]
