@@ -2,6 +2,7 @@ import os
 
 from dotenv import load_dotenv
 from flask import Flask
+from flask_talisman import Talisman
 
 load_dotenv()
 
@@ -37,6 +38,7 @@ def create_app(config_object=None):
 
     app.register_blueprint(wallet_bp)
 
+    Talisman(app)
     with app.app_context():
         db.create_all()
 

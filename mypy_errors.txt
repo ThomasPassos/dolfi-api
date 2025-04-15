@@ -1,0 +1,33 @@
+app/services/price_service.py:4: error: Library stubs not installed for "requests"  [import-untyped]
+app/ext/models.py:4: error: Cannot find implementation or library stub for module named "flask_sqlalchemy"  [import-not-found]
+app/ext/models.py:5: error: Cannot find implementation or library stub for module named "sqlalchemy.orm"  [import-not-found]
+app/ext/models.py:10: error: Name "db.Model" is not defined  [name-defined]
+app/ext/models.py:24: error: Name "db.Model" is not defined  [name-defined]
+app/services/blockchain_service.py:4: error: Library stubs not installed for "requests"  [import-untyped]
+app/services/blockchain_service.py:4: note: Hint: "python3 -m pip install types-requests"
+app/services/blockchain_service.py:4: note: (or run "mypy --install-types" to install all missing stub packages)
+app/ext/schemas.py:3: error: Cannot find implementation or library stub for module named "flask_marshmallow"  [import-not-found]
+app/ext/schemas.py:4: error: Cannot find implementation or library stub for module named "marshmallow"  [import-not-found]
+app/ext/schemas.py:5: error: Cannot find implementation or library stub for module named "marshmallow_sqlalchemy.fields"  [import-not-found]
+app/ext/schemas.py:12: error: Name "ma.SQLAlchemyAutoSchema" is not defined  [name-defined]
+app/ext/schemas.py:28: error: Name "ma.SQLAlchemyAutoSchema" is not defined  [name-defined]
+app/services/calculation_service.py:5: error: Cannot find implementation or library stub for module named "flask_sqlalchemy"  [import-not-found]
+app/services/calculation_service.py:22: error: "dict" expects 2 type arguments, but 1 given  [type-arg]
+app/services/calculation_service.py:22: error: Invalid type comment or annotation  [valid-type]
+app/services/calculation_service.py:22: note: did you mean to use ',' instead of ':' ?
+app/services/calculation_service.py:60: error: "dict" expects 2 type arguments, but 1 given  [type-arg]
+app/services/calculation_service.py:60: error: Invalid type comment or annotation  [valid-type]
+app/services/calculation_service.py:60: note: did you mean to use ',' instead of ':' ?
+app/services/calculation_service.py:64: error: Incompatible return value type (got "tuple[None, None]", expected "tuple[dict[Any, Any], list[dict[Any, Any]]]")  [return-value]
+app/services/calculation_service.py:69: error: Incompatible return value type (got "tuple[None, None]", expected "tuple[dict[Any, Any], list[dict[Any, Any]]]")  [return-value]
+app/services/calculation_service.py:143: error: Missing return statement  [return]
+app/services/calculation_service.py:147: error: Incompatible return value type (got "None", expected "int")  [return-value]
+app/services/calculation_service.py:154: error: Need type annotation for "new_txs_ids" (hint: "new_txs_ids: list[<type>] = ...")  [var-annotated]
+app/services/calculation_service.py:159: error: Incompatible return value type (got "None", expected "int")  [return-value]
+app/services/calculation_service.py:163: error: Incompatible types in assignment (expression has type "set[Any]", variable has type "list[Any]")  [assignment]
+app/routes.py:3: error: Cannot find implementation or library stub for module named "flask"  [import-not-found]
+app/ext/tasks.py:3: error: Cannot find implementation or library stub for module named "flask_apscheduler"  [import-not-found]
+app/__init__.py:3: error: Cannot find implementation or library stub for module named "dotenv"  [import-not-found]
+app/__init__.py:3: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+app/__init__.py:4: error: Cannot find implementation or library stub for module named "flask"  [import-not-found]
+Found 27 errors in 8 files (checked 8 source files)
