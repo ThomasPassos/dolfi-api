@@ -2,8 +2,8 @@ import logging
 
 from flask import Blueprint, jsonify
 
-from app.models import Wallet, db
-from app.schemas import WalletSchema
+from app.ext.models import Wallet, db
+from app.ext.schemas import WalletSchema
 from app.services.calculation_service import CalculationService
 
 bp = Blueprint("wallet", __name__)

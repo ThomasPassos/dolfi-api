@@ -4,7 +4,7 @@ from flask_marshmallow import Marshmallow
 from marshmallow import fields, post_dump
 from marshmallow_sqlalchemy.fields import Nested
 
-from app.models import Transaction, Wallet
+from app.ext.models import Transaction, Wallet
 
 ma = Marshmallow()
 

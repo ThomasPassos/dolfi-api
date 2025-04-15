@@ -4,8 +4,8 @@ from typing import Any
 
 from flask_sqlalchemy import SQLAlchemy
 
-from app.models import Wallet
-from app.schemas import TransactionSchema, WalletSchema
+from app.ext.models import Wallet
+from app.ext.schemas import TransactionSchema, WalletSchema
 from app.services.blockchain_service import BlockchainService
 from app.services.price_service import PriceService
 
