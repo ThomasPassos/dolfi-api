@@ -20,36 +20,40 @@ class CalculationService:
         self.wallet_schema = WalletSchema()
 
     def process_transaction(self, tx: dict[str:Any], address: str) -> dict[str:Any]:
-        tx_date = tx["status"]["block_time"]
-        btc_price = self.prices.get_bitcoin_price(tx_date)
+        try:
+            tx_date = tx["status"]["block_time"]
+            btc_price = self.prices.get_bitcoin_price(tx_date)
 
-        total_received = 0
-        total_spent = 0
+            total_received = 0
+            total_spent = 0
 
-        # Entradas: gastos (vin)
-        for vin in tx.get("vin", []):
-            prev = vin.get("prevout", {})
-            if prev.get("scriptpubkey_address") == address:
-                total_spent += prev.get("value", 0) / 1e8
+            # Entradas: gastos (vin)
+            for vin in tx.get("vin", []):
+                prev = vin.get("prevout", {})
+                if prev.get("scriptpubkey_address") == address:
+                    total_spent += prev.get("value", 0) / 1e8
 
-        # Saídas: recebimentos (vout)
-        for vout in tx.get("vout", []):
-            if vout.get("scriptpubkey_address") == address:
-                total_received += vout.get("value", 0) / 1e8
+            # Saídas: recebimentos (vout)
+            for vout in tx.get("vout", []):
+                if vout.get("scriptpubkey_address") == address:
+                    total_received += vout.get("value", 0) / 1e8
 
-        net_btc = total_received - total_spent
-        net_usd = net_btc * btc_price
+            net_btc = total_received - total_spent
+            net_usd = net_btc * btc_price
 
-        tx_in = True if net_btc >= 0 else False
-        tx_date = datetime.fromtimestamp(tx_date).isoformat()
-        return {
-            "wallet_address": address,
-            "transaction_date": tx_date,
-            "balance_btc": net_btc,
-            "balance_usd": net_usd,
-            "tx_in": tx_in,
-            "transaction_id": tx.get("txid"),
-        }
+            tx_in = True if net_btc >= 0 else False
+            tx_date = datetime.fromtimestamp(tx_date).isoformat()
+            return {
+                "wallet_address": address,
+                "transaction_date": tx_date,
+                "balance_btc": net_btc,
+                "balance_usd": net_usd,
+                "tx_in": tx_in,
+                "transaction_id": tx.get("txid"),
+            }
+        except Exception as e:
+            logger.warning(f"Falha ao processar a transação {tx.get('txid')} da carteira {address}")
+            return {}
 
     def calculate_wallet_data(self, address: str) -> tuple[dict[str], list[dict[str:Any]]]:
         wallet_info = self.blockchain.get_wallet_info(address)
@@ -138,35 +142,29 @@ class CalculationService:
         wallet_info = self.blockchain.get_wallet_info(wallet.address)
         if not wallet_info:
             logger.error(f"Informações da Wallet não encontradas para atualizar {wallet.address}")
-            return
+            return None
 
         wallet_data = self.calculate_from_transactions(wallet)
         current_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", None)
         has_new = current_tx_count > wallet.transaction_count
-
-        if current_tx_count is None:
-            logger.warning(f"Wallet {wallet.address} sem número de transações!")
-            current_tx_count = len(wallet.transactions)
         wallet_data["transaction_count"] = current_tx_count
 
         if has_new:
             txs = self.blockchain.get_all_transactions(wallet.address)
             if not txs:
-                logger.error(f"Nenhuma transação encontrada para {wallet.address}")
-                return
+                return None
 
-            processed_txs = []
             stored_txids = {tx.transaction_id for tx in wallet.transactions}
+            processed_txs = [self.process_transaction(tx, wallet.address) for tx in txs]
+            processed_txs = [tx for tx in processed_txs if tx]
+            new_txs = [tx for tx in processed_txs if tx["transaction_id"] not in stored_txids]
 
-            for tx in txs:
-                processed_tx = self.process_transaction(tx, wallet.address)
-                if not processed_tx:
-                    continue
-                processed_txs.append(processed_tx)
-                if processed_tx["transaction_id"] not in stored_txids:
-                    self.tx_schema.load(processed_tx, session=db.session)
+            transactions = (self.tx_schema.load(tx, session=db.session) for tx in new_txs)
+            schema_kwargs = {"instance": wallet, "partial": True, "session": db.session}
+            wallet = self.wallet_schema.load(wallet_data, kwargs=schema_kwargs)
 
-            self.wallet_schema.load(wallet_data, instance=wallet, partial=True, session=db.session)
+            db.session.add(wallet)
+            db.session.add_all(transactions)
         try:
             db.session.commit()
         except Exception as e:

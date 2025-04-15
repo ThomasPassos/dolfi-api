@@ -38,8 +38,8 @@ def add_wallet(address):
         db.session.add_all(transactions)
         db.session.commit()
     except Exception as e:
-        db.session.rollback()
         logger.error(f"Falha ao inserir carteira no banco de dados: {e}")
+        db.session.rollback()
         return jsonify({"error": "Falha ao adicionar a carteira"}), 500
 
     return jsonify({"message": "Carteira inserida e dados calculados."}), 201
