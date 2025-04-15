@@ -52,7 +52,9 @@ class CalculationService:
                 "transaction_id": tx.get("txid"),
             }
         except Exception as e:
-            logger.warning(f"Falha ao processar a transação {tx.get('txid')} da carteira {address}")
+            logger.warning(
+                f"Falha no processo a transação {tx.get('txid')} da carteira {address}: {e}"
+            )
             return {}
 
     def calculate_wallet_data(self, address: str) -> tuple[dict[str], list[dict[str:Any]]]:
@@ -122,7 +124,7 @@ class CalculationService:
             else:
                 returned_usd += abs(tx.balance_usd)
 
-        current_price = self.prices.get_bitcoin_price(datetime.now())
+        current_price = self.prices.get_bitcoin_price(datetime.now().timestamp())
         logger.warning(f"Preço atual do BTC retornado como {current_price} para {wallet.address}")
         balance_usd = balance_btc * current_price
 
@@ -138,16 +140,18 @@ class CalculationService:
             "roa": roa,
         }
 
-    def update_wallet(self, wallet: Wallet, db: SQLAlchemy) -> None:
+    def update_wallet(self, wallet: Wallet, db: SQLAlchemy) -> int:
         wallet_info = self.blockchain.get_wallet_info(wallet.address)
         if not wallet_info:
             logger.error(f"Informações da Wallet não encontradas para atualizar {wallet.address}")
             return None
 
-        wallet_data = self.calculate_from_transactions(wallet)
         current_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", None)
         has_new = current_tx_count > wallet.transaction_count
+
+        wallet_data = self.calculate_from_transactions(wallet)
         wallet_data["transaction_count"] = current_tx_count
+        new_txs_ids = []
 
         if has_new:
             txs = self.blockchain.get_all_transactions(wallet.address)
@@ -155,18 +159,22 @@ class CalculationService:
                 return None
 
             stored_txids = {tx.transaction_id for tx in wallet.transactions}
-            processed_txs = [self.process_transaction(tx, wallet.address) for tx in txs]
-            processed_txs = [tx for tx in processed_txs if tx]
-            new_txs = [tx for tx in processed_txs if tx["transaction_id"] not in stored_txids]
-
-            transactions = (self.tx_schema.load(tx, session=db.session) for tx in new_txs)
-            schema_kwargs = {"instance": wallet, "partial": True, "session": db.session}
-            wallet = self.wallet_schema.load(wallet_data, kwargs=schema_kwargs)
-
-            db.session.add(wallet)
+            txs_ids = {tx.get("txid") for tx in txs}
+            new_txs_ids = txs_ids.difference(stored_txids)
+            processed_txs = [
+                self.process_transaction(tx, wallet.address)
+                for tx in txs
+                if tx.get("txid") in new_txs_ids
+            ]
+            transactions = [self.tx_schema.load(tx, session=db.session) for tx in processed_txs]
             db.session.add_all(transactions)
+
+        wallet = self.wallet_schema.load(
+            wallet_data, instance=wallet, partial=True, session=db.session
+        )
         try:
             db.session.commit()
+            return len(new_txs_ids)
         except Exception as e:
             logger.error(f"Erro ao atualizar carteira {wallet.address}: {e}")
             db.session.rollback()

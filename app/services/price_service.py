@@ -1,4 +1,5 @@
 import os
+from pprint import pprint
 
 import requests
 
@@ -18,5 +19,6 @@ class PriceService:
         r = requests.get(CRYPTOCOMPARE_API_URL, params=params)
         if r.status_code == 200:
             price = r.json().get("BTC", {}).get("USD", 0)
+            pprint(r.json())
             return price
         return 0

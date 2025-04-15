@@ -15,8 +15,5 @@ def update_wallets_job():
         calc_service = CalculationService()
         wallets = Wallet.query.all()
         for wallet in wallets:
-            wallet_info = calc_service.blockchain.get_wallet_info(wallet.address)
-            if not wallet_info:
-                logger.error(f"Wallet info não encontrada para {wallet.address}")
-                continue
-            calc_service.update_wallet(wallet, db)
+            count = calc_service.update_wallet(wallet, db)
+            logger.info(f"Carteira {wallet.address} atualizada: {count} transações novas!")

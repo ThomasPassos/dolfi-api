@@ -26,12 +26,15 @@ def create_app(config_object=None):
     ma.init_app(app)
 
     from app.tasks import scheduler
+
     scheduler.init_app(app)
 
     from app.tasks import update_wallets_job  # noqa: F401
+
     scheduler.start()
 
     from app.routes import bp as wallet_bp
+
     app.register_blueprint(wallet_bp)
 
     with app.app_context():
