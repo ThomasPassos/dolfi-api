@@ -20,12 +20,7 @@ class CalculationService:
         self.wallet_schema = WalletSchema()
 
     def process_transaction(self, tx: dict[str:Any], address: str) -> dict[str:Any]:
-        try:
-            tx_date = datetime.fromtimestamp(tx["status"]["block_time"])
-        except Exception as e:
-            logger.error(f"Erro ao converter block_time para datetime: {e}")
-            tx_date = datetime.now()
-
+        tx_date = tx["status"]["block_time"]
         btc_price = self.prices.get_bitcoin_price(tx_date)
 
         total_received = 0
@@ -46,9 +41,9 @@ class CalculationService:
         net_usd = net_btc * btc_price
 
         tx_in = True if net_btc >= 0 else False
-
+        tx_date = datetime.fromtimestamp(tx_date).isoformat()
         return {
-            "address": address,
+            "wallet_address": address,
             "transaction_date": tx_date,
             "balance_btc": net_btc,
             "balance_usd": net_usd,
@@ -72,8 +67,8 @@ class CalculationService:
         returned_usd = 0
 
         # Data da primeira transação (mais antiga)
-        first_tx_date = datetime.fromtimestamp(txs[-1]["status"]["block_time"]) if txs else None
-
+        first_tx_date = txs[-1]["status"]["block_time"]
+        first_tx_date = datetime.fromtimestamp(first_tx_date).isoformat()
         # Processa apenas transações confirmadas
         for tx in txs:
             processed = self.process_transaction(tx, address)
