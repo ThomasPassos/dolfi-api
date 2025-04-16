@@ -25,4 +25,4 @@ WORKDIR /app
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /app /app
 
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "app:create_app()"]
+CMD ["/usr/local/bin/gunicorn", "--bind", "0.0.0.0:5000", "--workers", "4", "app:create_app()"]
