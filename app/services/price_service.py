@@ -2,6 +2,7 @@ import os
 from functools import lru_cache
 
 import requests
+from loguru import logger
 
 CRYPTOCOMPARE_API_KEY = os.getenv("CRYPTOCOMPARE_API_KEY", "")
 CRYPTOCOMPARE_API_URL = os.getenv("CRYPTOCOMPARE_API_URL", "")
@@ -23,5 +24,5 @@ class PriceService:
             price = r.json().get("BTC", {}).get("USD", 0)
             return price
         except requests.HTTPError as e:
-            print(e)
+            logger.error(f"Erro ao adquirir cotação do bitcoin:\n{e}")
         return 0

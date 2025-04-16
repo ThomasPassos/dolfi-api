@@ -1,5 +1,6 @@
 import logging
 import os
+import sys
 
 from dotenv import load_dotenv
 from flask import Flask
@@ -7,6 +8,8 @@ from flask_talisman import Talisman
 from loguru import logger
 
 load_dotenv()
+logger.remove()
+logger.add(sys.stdout, colorize=True)
 
 
 def create_app(config_object=None):
@@ -29,7 +32,8 @@ def create_app(config_object=None):
         from app.ext.logging import InterceptHandler
 
         app.logger.handlers = [InterceptHandler()]
-        app.logger.setLevel(logging.INFO)
+        if not os.getenv("FLASK_DEBUG"):
+            app.logger.setLevel(logging.INFO)
 
         from app.ext.models import db
 
@@ -43,7 +47,7 @@ def create_app(config_object=None):
 
         scheduler.init_app(app)
 
-        # from app.ext.tasks import update_wallets_job  # noqa: F401
+        from app.ext.tasks import update_wallets_job  # noqa: F401
 
         scheduler.start()
 
@@ -51,7 +55,7 @@ def create_app(config_object=None):
 
         app.register_blueprint(wallet_bp)
 
-        # Talisman(app)
+        Talisman(app, force_https=False)
         with app.app_context():
             db.create_all()
 

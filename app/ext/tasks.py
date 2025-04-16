@@ -15,6 +15,7 @@ def update_wallets_job():
         wallets = db.session.execute(select(Wallet)).scalars().all()
         if wallets:
             for wallet in wallets:
+                scheduler.app.logger.info(f"Atualizando carteira {wallet.address}!")
                 count = calc_service.update_wallet(wallet, db)
                 log_str = f"Carteira {wallet.address} atualizada: {count} transações novas!"
                 scheduler.app.logger.info(log_str)

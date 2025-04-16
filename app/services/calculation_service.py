@@ -1,15 +1,13 @@
-import logging
 from datetime import datetime
 from typing import Any, Collection
 
 from flask_sqlalchemy import SQLAlchemy
+from loguru import logger
 
 from app.ext.models import Wallet
 from app.ext.schemas import TransactionSchema, WalletSchema
 from app.services.blockchain_service import BlockchainService
 from app.services.price_service import PriceService
-
-logger = logging.getLogger(__name__)
 
 
 class CalculationService:
@@ -32,6 +30,7 @@ class CalculationService:
     def calculate_btc_roa(self, btc_today: float, first_transaction_date: str) -> float:
         btc_before = self.prices.get_bitcoin_price(first_transaction_date)
         if btc_before == 0:
+            logger.warning("BTC ROA zerado")
             return 0
         return (btc_today / btc_before) * 100
 
@@ -68,23 +67,26 @@ class CalculationService:
                 "transaction_id": tx.get("txid"),
             }
         except Exception as e:
-            logger.warning(
-                f"Falha no processo a transação {tx.get('txid')} da carteira {address}: {e}"
-            )
+            log_str = f"""Erro no processamento da transação {tx.get("txid")}
+             da carteira {address}:\n{e}"""
+            logger.error(log_str)
             return {}
 
     def calculate_wallet_data(  # noqa: PLR0914
         self, address: str
     ) -> tuple[dict[str, Any], list[dict[str, Any]]] | tuple[None, None]:
+        logger.info(f"Iniciado processo de extração de dados da wallet {address}")
+
         wallet_info = self.blockchain.get_wallet_info(address)
         if not wallet_info:
-            logger.error(f"Informações da Wallet não encontradas para atualizar {address}")
+            return None, None
 
         txs = self.blockchain.get_all_transactions(address)
         if not txs:
-            logger.error(f"Nenhuma transação encontrada para o endereço {address}")
+            logger.error(f"Nenhuma tx encontrada para o endereço {address}")
             return None, None
 
+        logger.debug(f"Iniciando processamento dos dados da wallet {address}")
         processed_txs = []
         invested_usd = 0
         returned_usd = 0
@@ -103,6 +105,7 @@ class CalculationService:
                 invested_usd += abs(processed["balance_usd"])
             else:
                 returned_usd += abs(processed["balance_usd"])
+        logger.debug(f"Txs da wallet {address} processados: {processed_txs[0]}")
 
         wallet_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", len(processed_txs))
         funded = wallet_info.get("chain_stats", {}).get("funded_txo_sum", 0) / 1e8
@@ -124,6 +127,7 @@ class CalculationService:
             "roa": roa,
             "first_transaction_date": first_tx_date_formated,
         }
+        logger.debug(f"Dados da wallet {address} processados: {wallet_data}")
         return wallet_data, processed_txs
 
     def calculate_from_transactions(self, wallet: Wallet) -> dict[str, Any]:
@@ -139,12 +143,10 @@ class CalculationService:
                 returned_usd += abs(tx.balance_usd)
 
         current_price = self.prices.get_bitcoin_price(datetime.now().timestamp())
-        logger.warning(f"Preço atual do BTC retornado como {current_price} para {wallet.address}")
         balance_usd = balance_btc * current_price
 
         roa = self.calculate_roa(invested_usd, balance_usd, returned_usd)
         btc_roa = self.calculate_btc_roa(current_price, wallet.first_transaction_date.timestamp())
-
         return {
             "balance_btc": balance_btc,
             "balance_usd": balance_usd,
@@ -155,7 +157,7 @@ class CalculationService:
     def update_wallet(self, wallet: Wallet, db: SQLAlchemy) -> int | None:
         wallet_info = self.blockchain.get_wallet_info(wallet.address)
         if not wallet_info:
-            logger.error(f"Informações da Wallet não encontradas para atualizar {wallet.address}")
+            return None
 
         current_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", None)
         has_new = current_tx_count > wallet.transaction_count
@@ -179,14 +181,17 @@ class CalculationService:
             ]
             transactions = [self.tx_schema.load(tx, session=db.session) for tx in processed_txs]
             db.session.add_all(transactions)
+            logger.debug(f"Txs da wallet {wallet.address} processadas, Ex: \n{transactions[0]}")
 
         wallet = self.wallet_schema.load(
             wallet_data, instance=wallet, partial=True, session=db.session
         )
+        logger.debug(f"Dados calculados da wallet {wallet.address}:\n{wallet}")
+
         try:
             db.session.commit()
             return len(new_txs_ids)
         except Exception as e:
-            logger.error(f"Erro ao atualizar carteira {wallet.address}: {e}")
+            logger.error(f"Erro ao atualizar wallet {wallet.address}: \n{e}")
             db.session.rollback()
             return None
