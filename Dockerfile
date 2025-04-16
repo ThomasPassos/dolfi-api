@@ -14,7 +14,7 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry install --only main --no-interaction --no-ansi --no-root
 
 # 3. Instalar Gunicorn explicitamente
-RUN pip install --no-cache-dir gunicorn==24.0.0
+RUN pip install --no-cache-dir gunicorn==23.0.0
 
 # 4. Copiar aplicação
 COPY . .
