@@ -9,9 +9,14 @@ load_dotenv()
 
 def create_app(config_object=None):
     app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("SQLALCHEMY_DATABASE")
+    app.config["SQLALCHEMY_DATABASE_URI"] = os.getenv("DATABASE_URI")
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-
+    app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+        "pool_pre_ping": True,
+        "pool_size": 20,
+        "max_overflow": 30,
+        "pool_recycle": 3600,
+    }
     app.config["SCHEDULER_API_ENABLED"] = True
     app.config["APSCHEDULER_JOB_DEFAULTS"] = {"coalesce": True, "max_instances": 1}
 

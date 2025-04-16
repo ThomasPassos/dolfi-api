@@ -1,6 +1,7 @@
 import os
 
 import requests
+from functools import lru_cache
 
 CRYPTOCOMPARE_API_KEY = os.getenv("CRYPTOCOMPARE_API_KEY", "")
 CRYPTOCOMPARE_API_URL = os.getenv("CRYPTOCOMPARE_API_URL", "")
@@ -8,6 +9,7 @@ CRYPTOCOMPARE_API_URL = os.getenv("CRYPTOCOMPARE_API_URL", "")
 
 class PriceService:
     @staticmethod
+    @lru_cache(maxsize=1024)
     def get_bitcoin_price(date: str) -> float:
         params = {
             "fsym": "BTC",
