@@ -15,9 +15,11 @@ class PriceService:
             "ts": date,
             "api_key": CRYPTOCOMPARE_API_KEY,
         }
-        r = requests.get(CRYPTOCOMPARE_API_URL, params=params)
-        if r.status_code == 200:
+        try:
+            r = requests.get(CRYPTOCOMPARE_API_URL, params=params)
+            r.raise_for_status()
             price = r.json().get("BTC", {}).get("USD", 0)
             return price
-
+        except requests.HTTPError as e:
+            print(e)
         return 0

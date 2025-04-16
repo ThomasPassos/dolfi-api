@@ -31,6 +31,8 @@ class CalculationService:
 
     def calculate_btc_roa(self, btc_today: float, first_transaction_date: str) -> float:
         btc_before = self.prices.get_bitcoin_price(first_transaction_date)
+        if btc_before == 0:
+            return 0
         return (btc_today / btc_before) * 100
 
     def process_transaction(self, tx: dict[str, Any], address: str) -> dict[Any, Any]:
@@ -89,7 +91,7 @@ class CalculationService:
 
         # Data da primeira transação (mais antiga)
         first_tx_date = txs[-1]["status"]["block_time"]
-        first_tx_date = datetime.fromtimestamp(first_tx_date).isoformat()
+        first_tx_date_formated = datetime.fromtimestamp(first_tx_date).isoformat()
         # Processa apenas transações confirmadas
         for tx in txs:
             processed = self.process_transaction(tx, address)
@@ -107,7 +109,7 @@ class CalculationService:
         spent = wallet_info.get("chain_stats", {}).get("spent_txo_sum", 0) / 1e8
         balance_btc = funded - spent
 
-        current_price = self.prices.get_bitcoin_price(datetime.now())
+        current_price = self.prices.get_bitcoin_price(datetime.now().timestamp())
         balance_usd = balance_btc * current_price
 
         roa = self.calculate_roa(invested_usd, balance_usd, returned_usd)
@@ -120,7 +122,7 @@ class CalculationService:
             "transaction_count": wallet_tx_count,
             "btc_roa": btc_roa,
             "roa": roa,
-            "first_transaction_date": first_tx_date,
+            "first_transaction_date": first_tx_date_formated,
         }
         return wallet_data, processed_txs
 
