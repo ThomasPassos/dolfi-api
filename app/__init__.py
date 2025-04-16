@@ -38,7 +38,7 @@ def create_app(config_object=None):
 
     app.register_blueprint(wallet_bp)
 
-    Talisman(app)
+    # Talisman(app)
     with app.app_context():
         db.create_all()
 
