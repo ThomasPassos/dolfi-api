@@ -1,7 +1,7 @@
 import os
+from functools import lru_cache
 
 import requests
-from functools import lru_cache
 
 CRYPTOCOMPARE_API_KEY = os.getenv("CRYPTOCOMPARE_API_KEY", "")
 CRYPTOCOMPARE_API_URL = os.getenv("CRYPTOCOMPARE_API_URL", "")
