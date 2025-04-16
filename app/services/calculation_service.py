@@ -19,6 +19,20 @@ class CalculationService:
         self.tx_schema = TransactionSchema()
         self.wallet_schema = WalletSchema()
 
+    @staticmethod
+    def calculate_roa(invested_usd: float, balance_usd: float, returned_usd: float) -> float:
+        if invested_usd > 0:
+            roa = (balance_usd + returned_usd - invested_usd) / invested_usd * 100
+            return roa
+        else:
+            logger.warning(f"ROA zerado: invested_usd = {invested_usd}")
+            roa = 0
+            return roa
+
+    def calculate_btc_roa(self, btc_today: float, first_transaction_date: str) -> float:
+        btc_before = self.prices.get_bitcoin_price(first_transaction_date)
+        return (btc_today / btc_before) * 100
+
     def process_transaction(self, tx: dict[str, Any], address: str) -> dict[Any, Any]:
         try:
             tx_date = tx["status"]["block_time"]
@@ -57,13 +71,12 @@ class CalculationService:
             )
             return {}
 
-    def calculate_wallet_data(
+    def calculate_wallet_data(  # noqa: PLR0914
         self, address: str
     ) -> tuple[dict[str, Any], list[dict[str, Any]]] | tuple[None, None]:
         wallet_info = self.blockchain.get_wallet_info(address)
         if not wallet_info:
-            logger.error(f"Informações da Wallet não encontradas para o endereço {address}")
-            return None, None
+            logger.error(f"Informações da Wallet não encontradas para atualizar {address}")
 
         txs = self.blockchain.get_all_transactions(address)
         if not txs:
@@ -97,18 +110,15 @@ class CalculationService:
         current_price = self.prices.get_bitcoin_price(datetime.now())
         balance_usd = balance_btc * current_price
 
-        # Cálculo do ROA: se invested_usd > 0, senão ROA=0 para evitar divisão por zero
-        if invested_usd > 0:
-            roa = (balance_usd + returned_usd - invested_usd) / invested_usd * 100
-        else:
-            roa = 0
-            logger.warning(f"ROA zerado: invested_usd = {invested_usd}")
+        roa = self.calculate_roa(invested_usd, balance_usd, returned_usd)
+        btc_roa = self.calculate_btc_roa(current_price, first_tx_date)
 
         wallet_data = {
             "address": address,
             "balance_btc": balance_btc,
             "balance_usd": balance_usd,
             "transaction_count": wallet_tx_count,
+            "btc_roa": btc_roa,
             "roa": roa,
             "first_transaction_date": first_tx_date,
         }
@@ -130,15 +140,13 @@ class CalculationService:
         logger.warning(f"Preço atual do BTC retornado como {current_price} para {wallet.address}")
         balance_usd = balance_btc * current_price
 
-        if invested_usd > 0:
-            roa = (balance_usd + returned_usd - invested_usd) / invested_usd * 100
-        else:
-            roa = 0
-            logger.warning(f"ROA zerado: invested_usd = {invested_usd}")
+        roa = self.calculate_roa(invested_usd, balance_usd, returned_usd)
+        btc_roa = self.calculate_btc_roa(current_price, wallet.first_transaction_date.timestamp())
 
         return {
             "balance_btc": balance_btc,
             "balance_usd": balance_usd,
+            "btc_roa": btc_roa,
             "roa": roa,
         }
 
@@ -146,7 +154,6 @@ class CalculationService:
         wallet_info = self.blockchain.get_wallet_info(wallet.address)
         if not wallet_info:
             logger.error(f"Informações da Wallet não encontradas para atualizar {wallet.address}")
-            return None
 
         current_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", None)
         has_new = current_tx_count > wallet.transaction_count
