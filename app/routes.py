@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 @bp.route("/<string:address>", methods=["GET"])
 @require_api_key
-def get_wallet(address):
+def get_wallet(address: str):
     wallet = Wallet.query.filter_by(address=address).first()
     if not wallet:
         return jsonify({"error": "Carteira não encontrada"}), 404
@@ -23,7 +23,7 @@ def get_wallet(address):
 
 @bp.route("/<string:address>", methods=["POST"])
 @require_api_key
-def add_wallet(address):
+def add_wallet(address: str):
     wallet = Wallet.query.filter_by(address=address).first()
     if wallet:
         return jsonify({"error": "Carteira já cadastrada."}), 400
@@ -35,7 +35,8 @@ def add_wallet(address):
         return jsonify({"error": "Falha ao obter dados da carteira."}), 500
 
     wallet = calc_service.wallet_schema.load(wallet_data, session=db.session)
-    transactions = (calc_service.tx_schema.load(tx, session=db.session) for tx in tx_list)
+    if tx_list:
+        transactions = (calc_service.tx_schema.load(tx, session=db.session) for tx in tx_list)
     try:
         db.session.add(wallet)
         db.session.add_all(transactions)
@@ -50,7 +51,7 @@ def add_wallet(address):
 
 @bp.route("/<string:address>", methods=["DELETE"])
 @require_api_key
-def delete_wallet(address):
+def delete_wallet(address: str):
     wallet = Wallet.query.filter_by(address=address).first()
     if not wallet:
         return jsonify({"error": "Carteira não encontrada."}), 404

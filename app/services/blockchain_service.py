@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 class BlockchainService:
     @staticmethod
-    def get_wallet_info(address):
+    def get_wallet_info(address: str) -> dict[str, str] | None:
         url = f"{BLOCKSTREAM_API_URL}/address/{address}"
         try:
             r = requests.get(url, timeout=10)
@@ -20,7 +20,7 @@ class BlockchainService:
             return None
 
     @staticmethod
-    def get_all_transactions(address):
+    def get_all_transactions(address: str) -> list[dict[str, str]]:
         txs = []
         last_txid = None
         while True:
