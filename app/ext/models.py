@@ -2,9 +2,14 @@ from datetime import datetime
 from typing import List, Optional
 
 from flask_sqlalchemy import SQLAlchemy
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-db = SQLAlchemy()
+
+class Base(DeclarativeBase):
+    pass
+
+
+db = SQLAlchemy(model_class=Base)
 
 
 class Wallet(db.Model):
@@ -14,7 +19,7 @@ class Wallet(db.Model):
     balance_usd: Mapped[float] = mapped_column(default=0)
     transaction_count: Mapped[int] = mapped_column(default=0)
     roa: Mapped[float] = mapped_column(default=0)
-    # btc_val: Mapped[float] = mapped_column(default=0)
+    btc_roa: Mapped[float] = mapped_column(default=0)
     first_transaction_date: Mapped[Optional[datetime]] = mapped_column()
     transactions: Mapped[List["Transaction"]] = relationship(
         "Transaction", back_populates="wallet", cascade="all, delete-orphan"

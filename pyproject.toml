@@ -27,6 +27,12 @@ build-backend = "poetry.core.masonry.api"
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.2"
 taskipy = "^1.14.1"
+mypy = "^1.15.0"
+
+
+[tool.poetry.group.stubs.dependencies]
+types-requests = "^2.32.0.20250328"
+types-flask = "^1.1.6"
 
 [tool.ruff]
 line-length = 100
@@ -46,3 +52,8 @@ run = "flask run"
 lint = "ruff check . ; ruff check . --diff"
 format = "ruff check . --fix ; ruff format ."
 commit = "git add . ; git commit -a -m"
+
+[tool.mypy]
+python_version = "3.12"
+ignore_missing_imports = true
+disable_error_code = "name-defined"

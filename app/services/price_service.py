@@ -1,10 +1,9 @@
 import os
-from pprint import pprint
 
 import requests
 
-CRYPTOCOMPARE_API_KEY = os.getenv("CRYPTOCOMPARE_API_KEY")
-CRYPTOCOMPARE_API_URL = os.getenv("CRYPTOCOMPARE_API_URL")
+CRYPTOCOMPARE_API_KEY = os.getenv("CRYPTOCOMPARE_API_KEY", "")
+CRYPTOCOMPARE_API_URL = os.getenv("CRYPTOCOMPARE_API_URL", "")
 
 
 class PriceService:

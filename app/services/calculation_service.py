@@ -1,6 +1,6 @@
 import logging
 from datetime import datetime
-from typing import Any
+from typing import Any, Collection
 
 from flask_sqlalchemy import SQLAlchemy
 
@@ -19,7 +19,7 @@ class CalculationService:
         self.tx_schema = TransactionSchema()
         self.wallet_schema = WalletSchema()
 
-    def process_transaction(self, tx: dict[str:Any], address: str) -> dict[str:Any]:
+    def process_transaction(self, tx: dict[str, Any], address: str) -> dict[Any, Any]:
         try:
             tx_date = tx["status"]["block_time"]
             btc_price = self.prices.get_bitcoin_price(tx_date)
@@ -57,7 +57,9 @@ class CalculationService:
             )
             return {}
 
-    def calculate_wallet_data(self, address: str) -> tuple[dict[str], list[dict[str:Any]]]:
+    def calculate_wallet_data(
+        self, address: str
+    ) -> tuple[dict[str, Any], list[dict[str, Any]]] | tuple[None, None]:
         wallet_info = self.blockchain.get_wallet_info(address)
         if not wallet_info:
             logger.error(f"Informações da Wallet não encontradas para o endereço {address}")
@@ -112,10 +114,10 @@ class CalculationService:
         }
         return wallet_data, processed_txs
 
-    def calculate_from_transactions(self, wallet: Wallet):
-        invested_usd = 0
-        returned_usd = 0
-        balance_btc = 0
+    def calculate_from_transactions(self, wallet: Wallet) -> dict[str, Any]:
+        invested_usd = 0.0
+        returned_usd = 0.0
+        balance_btc = 0.0
 
         for tx in wallet.transactions:
             balance_btc += tx.balance_btc
@@ -140,7 +142,7 @@ class CalculationService:
             "roa": roa,
         }
 
-    def update_wallet(self, wallet: Wallet, db: SQLAlchemy) -> int:
+    def update_wallet(self, wallet: Wallet, db: SQLAlchemy) -> int | None:
         wallet_info = self.blockchain.get_wallet_info(wallet.address)
         if not wallet_info:
             logger.error(f"Informações da Wallet não encontradas para atualizar {wallet.address}")
@@ -151,7 +153,7 @@ class CalculationService:
 
         wallet_data = self.calculate_from_transactions(wallet)
         wallet_data["transaction_count"] = current_tx_count
-        new_txs_ids = []
+        new_txs_ids: Collection[int | None] = []
 
         if has_new:
             txs = self.blockchain.get_all_transactions(wallet.address)
@@ -178,3 +180,4 @@ class CalculationService:
         except Exception as e:
             logger.error(f"Erro ao atualizar carteira {wallet.address}: {e}")
             db.session.rollback()
+            return None

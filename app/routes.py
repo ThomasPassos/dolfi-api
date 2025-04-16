@@ -11,7 +11,7 @@ bp = Blueprint("wallet", __name__)
 logger = logging.getLogger(__name__)
 
 
-@bp.get("/<string:address>")
+@bp.route("/<string:address>", methods=["GET"])
 @require_api_key
 def get_wallet(address):
     wallet = Wallet.query.filter_by(address=address).first()
@@ -21,7 +21,7 @@ def get_wallet(address):
     return wallet_data, 200
 
 
-@bp.post("/<string:address>")
+@bp.route("/<string:address>", methods=["POST"])
 @require_api_key
 def add_wallet(address):
     wallet = Wallet.query.filter_by(address=address).first()
@@ -34,9 +34,9 @@ def add_wallet(address):
     if wallet_data is None:
         return jsonify({"error": "Falha ao obter dados da carteira."}), 500
 
+    wallet = calc_service.wallet_schema.load(wallet_data, session=db.session)
+    transactions = (calc_service.tx_schema.load(tx, session=db.session) for tx in tx_list)
     try:
-        wallet = calc_service.wallet_schema.load(wallet_data, session=db.session)
-        transactions = (calc_service.tx_schema.load(tx, session=db.session) for tx in tx_list)
         db.session.add(wallet)
         db.session.add_all(transactions)
         db.session.commit()
@@ -48,7 +48,7 @@ def add_wallet(address):
     return jsonify({"message": "Carteira inserida e dados calculados."}), 201
 
 
-@bp.delete("/<string:address>")
+@bp.route("/<string:address>", methods=["DELETE"])
 @require_api_key
 def delete_wallet(address):
     wallet = Wallet.query.filter_by(address=address).first()
