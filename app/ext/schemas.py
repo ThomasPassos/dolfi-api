@@ -37,6 +37,8 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
     @post_dump
     @staticmethod
     def change_date_dump(data, many, **kwargs):
-        date = datetime.strptime(data["first_transaction_date"], "%Y-%m-%dT%H:%M:%S")
-        data["first_transaction_date"] = date.strftime("%d/%m/%Y, %H:%M:%S")
+        if data.get("first_transaction_date"):
+            date = datetime.strptime(data["first_transaction_date"], "%Y-%m-%dT%H:%M:%S")
+            data["first_transaction_date"] = date.strftime("%d/%m/%Y, %H:%M:%S")
+            return data
         return data

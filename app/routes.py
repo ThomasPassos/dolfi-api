@@ -18,11 +18,11 @@ def get_all_wallet():
     if not wallets:
         current_app.logger.warning("Não existem wallets salvas")
         return jsonify({"error": "Carteiras não encontradas"}), 404
-    wallet_data = WalletSchema(
+    wallets_data = WalletSchema(
         many=True, exclude=("transactions", "btc_price_change", "first_transaction_date", "transaction_count")
     ).dump(wallets)
     current_app.logger.debug("Retornados os dados de todas as carteiras")
-    return jsonify(wallet_data), 200
+    return jsonify(wallets_data), 200
 
 
 @bp.route("/<string:address>", methods=["GET"])
