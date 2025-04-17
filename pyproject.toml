@@ -57,6 +57,9 @@ run = "flask run"
 lint = "ruff check . ; ruff check . --diff"
 format = "ruff check . --fix ; ruff format ."
 commit = "git add . ; git commit -a -m"
+build = "sudo docker build -t dolfi ."
+dkrun = "sudo docker run -p 5000:5000 --env-file .flaskenv dolfi"
+rm-all-imgs = "docker rmi $(docker images -q)"
 
 [tool.mypy]
 python_version = "3.12"

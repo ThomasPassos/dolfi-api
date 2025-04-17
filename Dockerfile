@@ -9,4 +9,4 @@ COPY pyproject.toml poetry.lock ./
 RUN poetry config virtualenvs.create false && \
     poetry install --only main --no-root --no-interaction --no-ansi
 COPY . .
-CMD ["gunicorn", "--bind", "0.0.0.0:5000", "--workers", "16", "app:create_app()"]
+CMD ["gunicorn", "-c", "gunicorn.conf.py","app:create_app()"]

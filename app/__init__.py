@@ -55,7 +55,7 @@ def create_app(config_object=None):
 
         app.register_blueprint(wallet_bp)
 
-        Talisman(app, force_https=False)
+        # Talisman(app, force_https=False)
         with app.app_context():
             db.create_all()
 
