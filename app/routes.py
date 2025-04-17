@@ -1,4 +1,4 @@
-from flask import Blueprint, current_app, jsonify
+from flask import Blueprint, current_app, jsonify, request
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -97,3 +97,8 @@ def delete_wallet(address: str):
         current_app.logger.error(f"Erro ao deletar carteira {address}:\n{e}")
         db.session.rollback()
         return jsonify({"message": "Erro ao deletar a carteira."}), 500
+
+
+@bp.before_request
+def log_request_method():
+    current_app.logger.info(f"Requisição recebida - Método: {request.method}, Cabeçalhos: {request.headers}")

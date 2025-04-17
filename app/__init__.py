@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 from flask import Flask
 from flask_talisman import Talisman
 from loguru import logger
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 from config import Config
 
@@ -24,6 +25,7 @@ def create_app(config_object=Config):
         if not app.debug:
             app.logger.setLevel(logging.INFO)
 
+        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
         # Inicialização das extensões
         from app.ext.models import db
 
