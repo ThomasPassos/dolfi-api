@@ -50,9 +50,7 @@ def create_app(config_object=Config):
 
         app.register_blueprint(wallet_bp)
 
-        # Configuração do Talisman com opções adicionais (exemplo)
         Talisman(app, force_https=False, content_security_policy=None)
-
         return app
     except Exception as e:
         logger.critical(f"Factory não retornando a aplicação: {e}\n{traceback.format_exc()}")
