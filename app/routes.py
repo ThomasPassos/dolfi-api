@@ -10,6 +10,19 @@ from app.services.calculation_service import CalculationService
 bp = Blueprint("wallet", __name__)
 
 
+@bp.route("/all", methods=["GET"])
+@require_api_key
+def get_all_wallet():
+    current_app.logger.debug("Pegando todas as wallets")
+    wallets = db.session.execute(select(Wallet)).scalars().all()
+    if not wallets:
+        current_app.logger.warning("Não existem wallets salvas")
+        return jsonify({"error": "Carteiras não encontradas"}), 404
+    wallet_data = WalletSchema(many=True, exclude=("transactions",)).dump(wallets)
+    current_app.logger.debug("Retornados os dados de todas as carteiras")
+    return jsonify(wallet_data), 200
+
+
 @bp.route("/<string:address>", methods=["GET"])
 @require_api_key
 def get_wallet(address: str):
