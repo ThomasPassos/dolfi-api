@@ -1,5 +1,6 @@
 from datetime import datetime
-from typing import Any, Collection
+from decimal import Decimal
+from typing import Any, Collection, Union
 
 from flask_sqlalchemy import SQLAlchemy
 from loguru import logger
@@ -18,63 +19,56 @@ class CalculationService:
         self.wallet_schema = WalletSchema()
 
     @staticmethod
-    def calculate_roa(invested_usd: float, balance_usd: float, returned_usd: float) -> float:
+    def calculate_roa(invested_usd: Decimal, balance_usd: Decimal, returned_usd: Decimal) -> Decimal:
         if invested_usd > 0:
             roa = (balance_usd + returned_usd - invested_usd) / invested_usd * 100
             return roa
-        else:
-            logger.warning(f"ROA zerado: invested_usd = {invested_usd}")
-            roa = 0
-            return roa
+        logger.warning(f"ROA zerado: invested_usd = {invested_usd}")
+        return Decimal("0")
 
-    def calculate_btc_roa(self, btc_today: float, first_transaction_date: str) -> float:
-        btc_before = self.prices.get_bitcoin_price(first_transaction_date)
+    def calculate_btc_price_change(self, btc_today: Decimal, first_tx_dt: Union[int, float]) -> Decimal:
+        btc_before = Decimal(str(self.prices.get_bitcoin_price(first_tx_dt)))
         if btc_before == 0:
-            logger.warning("BTC ROA zerado")
-            return 0
+            logger.warning("BTC price change zerado")
+            return Decimal("0")
         return (btc_today / btc_before) * 100
 
     def process_transaction(self, tx: dict[str, Any], address: str) -> dict[Any, Any]:
         try:
             tx_date = tx["status"]["block_time"]
-            btc_price = self.prices.get_bitcoin_price(tx_date)
+            btc_price = Decimal(str(self.prices.get_bitcoin_price(int(tx_date))))
 
-            total_received = 0
-            total_spent = 0
+            total_received = Decimal("0")
+            total_spent = Decimal("0")
+            satoshi_to_btc = Decimal("1e8")
 
-            # Entradas: gastos (vin)
             for vin in tx.get("vin", []):
                 prev = vin.get("prevout", {})
                 if prev.get("scriptpubkey_address") == address:
-                    total_spent += prev.get("value", 0) / 1e8
+                    total_spent += Decimal(str(prev.get("value", 0))) / satoshi_to_btc
 
-            # Saídas: recebimentos (vout)
             for vout in tx.get("vout", []):
                 if vout.get("scriptpubkey_address") == address:
-                    total_received += vout.get("value", 0) / 1e8
+                    total_received += Decimal(str(vout.get("value", 0))) / satoshi_to_btc
 
             net_btc = total_received - total_spent
             net_usd = net_btc * btc_price
 
-            tx_in = True if net_btc >= 0 else False
+            is_incoming = net_btc >= 0
             tx_date = datetime.fromtimestamp(tx_date).isoformat()
             return {
                 "wallet_address": address,
                 "transaction_date": tx_date,
                 "balance_btc": net_btc,
                 "balance_usd": net_usd,
-                "tx_in": tx_in,
+                "is_incoming": is_incoming,
                 "transaction_id": tx.get("txid"),
             }
         except Exception as e:
-            log_str = f"""Erro no processamento da transação {tx.get("txid")}
-             da carteira {address}:\n{e}"""
-            logger.error(log_str)
-            return {}
+            logger.error(f"Erro no processamento da transação {tx.get('txid')} da carteira {address}: {e}")
+            return {"error": str(e)}
 
-    def calculate_wallet_data(  # noqa: PLR0914
-        self, address: str
-    ) -> tuple[dict[str, Any], list[dict[str, Any]]] | tuple[None, None]:
+    def calculate_wallet_data(self, address: str) -> tuple[dict[str, Any], list[dict[str, Any]]] | tuple[None, None]:  # noqa: PLR0914
         logger.info(f"Iniciado processo de extração de dados da wallet {address}")
 
         wallet_info = self.blockchain.get_wallet_info(address)
@@ -88,69 +82,72 @@ class CalculationService:
 
         logger.debug(f"Iniciando processamento dos dados da wallet {address}")
         processed_txs = []
-        invested_usd = 0
-        returned_usd = 0
+        invested_usd = Decimal("0")
+        returned_usd = Decimal("0")
 
-        # Data da primeira transação (mais antiga)
         first_tx_date = txs[-1]["status"]["block_time"]
-        first_tx_date_formated = datetime.fromtimestamp(first_tx_date).isoformat()
-        # Processa apenas transações confirmadas
+        first_tx_date_formatted = datetime.fromtimestamp(first_tx_date).isoformat()
+
         for tx in txs:
             processed = self.process_transaction(tx, address)
-            if not processed:
+            if not processed or "error" in processed:
                 continue
             processed_txs.append(processed)
 
-            if processed["balance_btc"] > 0:
-                invested_usd += abs(processed["balance_usd"])
+            balance_btc = Decimal(str(processed["balance_btc"]))
+            balance_usd = Decimal(str(processed["balance_usd"]))
+            if balance_btc > 0:
+                invested_usd += abs(balance_usd)
             else:
-                returned_usd += abs(processed["balance_usd"])
-        logger.debug(f"Txs da wallet {address} processados: {processed_txs[0]}")
+                returned_usd += abs(balance_usd)
+        logger.debug(f"Txs da wallet {address} processados: {processed_txs[0] if processed_txs else 'nenhuma'}")
 
         wallet_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", len(processed_txs))
-        funded = wallet_info.get("chain_stats", {}).get("funded_txo_sum", 0) / 1e8
-        spent = wallet_info.get("chain_stats", {}).get("spent_txo_sum", 0) / 1e8
+        funded = Decimal(str(wallet_info.get("chain_stats", {}).get("funded_txo_sum", 0))) / Decimal("1e8")
+        spent = Decimal(str(wallet_info.get("chain_stats", {}).get("spent_txo_sum", 0))) / Decimal("1e8")
         balance_btc = funded - spent
 
-        current_price = self.prices.get_bitcoin_price(datetime.now().timestamp())
+        current_price = Decimal(str(self.prices.get_bitcoin_price(datetime.now().timestamp())))
         balance_usd = balance_btc * current_price
 
         roa = self.calculate_roa(invested_usd, balance_usd, returned_usd)
-        btc_roa = self.calculate_btc_roa(current_price, first_tx_date)
+        btc_price_change = self.calculate_btc_price_change(current_price, int(first_tx_date))
 
         wallet_data = {
             "address": address,
             "balance_btc": balance_btc,
             "balance_usd": balance_usd,
             "transaction_count": wallet_tx_count,
-            "btc_roa": btc_roa,
+            "btc_price_change": btc_price_change,
             "roa": roa,
-            "first_transaction_date": first_tx_date_formated,
+            "first_transaction_date": first_tx_date_formatted,
         }
         logger.debug(f"Dados da wallet {address} processados: {wallet_data}")
         return wallet_data, processed_txs
 
     def calculate_from_transactions(self, wallet: Wallet) -> dict[str, Any]:
-        invested_usd = 0.0
-        returned_usd = 0.0
-        balance_btc = 0.0
+        invested_usd = Decimal("0")
+        returned_usd = Decimal("0")
+        balance_btc = Decimal("0")
 
         for tx in wallet.transactions:
-            balance_btc += tx.balance_btc
-            if tx.balance_btc > 0:
-                invested_usd += abs(tx.balance_usd)
+            tx_btc = Decimal(str(tx.balance_btc))
+            tx_usd = Decimal(str(tx.balance_usd))
+            balance_btc += tx_btc
+            if tx_btc > 0:
+                invested_usd += abs(tx_usd)
             else:
-                returned_usd += abs(tx.balance_usd)
+                returned_usd += abs(tx_usd)
 
-        current_price = self.prices.get_bitcoin_price(datetime.now().timestamp())
+        current_price = Decimal(str(self.prices.get_bitcoin_price(datetime.now().timestamp())))
         balance_usd = balance_btc * current_price
 
         roa = self.calculate_roa(invested_usd, balance_usd, returned_usd)
-        btc_roa = self.calculate_btc_roa(current_price, wallet.first_transaction_date.timestamp())
+        btc_price_change = self.calculate_btc_price_change(current_price, wallet.first_transaction_date.timestamp())
         return {
             "balance_btc": balance_btc,
             "balance_usd": balance_usd,
-            "btc_roa": btc_roa,
+            "btc_price_change": btc_price_change,
             "roa": roa,
         }
 
@@ -174,24 +171,18 @@ class CalculationService:
             stored_txids = {tx.transaction_id for tx in wallet.transactions}
             txs_ids = {tx.get("txid") for tx in txs}
             new_txs_ids = txs_ids.difference(stored_txids)
-            processed_txs = [
-                self.process_transaction(tx, wallet.address)
-                for tx in txs
-                if tx.get("txid") in new_txs_ids
-            ]
-            transactions = [self.tx_schema.load(tx, session=db.session) for tx in processed_txs]
+            processed_txs = [self.process_transaction(tx, wallet.address) for tx in txs if tx.get("txid") in new_txs_ids]
+            transactions = [self.tx_schema.load(tx, session=db.session) for tx in processed_txs if "error" not in tx]
             db.session.add_all(transactions)
-            logger.debug(f"Txs da wallet {wallet.address} processadas, Ex: \n{transactions[0]}")
+            logger.debug(f"Txs da wallet {wallet.address} processadas, Ex: {transactions[0] if transactions else 'nenhuma'}")
 
-        wallet = self.wallet_schema.load(
-            wallet_data, instance=wallet, partial=True, session=db.session
-        )
-        logger.debug(f"Dados calculados da wallet {wallet.address}:\n{wallet}")
+        wallet = self.wallet_schema.load(wallet_data, instance=wallet, partial=True, session=db.session)
+        logger.debug(f"Dados calculados da wallet {wallet.address}: {wallet}")
 
         try:
             db.session.commit()
             return len(new_txs_ids)
         except Exception as e:
-            logger.error(f"Erro ao atualizar wallet {wallet.address}: \n{e}")
+            logger.error(f"Erro ao atualizar wallet {wallet.address}: {e}")
             db.session.rollback()
             return None

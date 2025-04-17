@@ -42,7 +42,7 @@ types-requests = "^2.32.0.20250328"
 types-flask = "^1.1.6"
 
 [tool.ruff]
-line-length = 100
+line-length = 130
 extend-exclude = ['static']
 
 [tool.ruff.lint]

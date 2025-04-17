@@ -1,4 +1,5 @@
 import os
+from typing import Any
 
 import requests
 from loguru import logger
@@ -8,7 +9,8 @@ BLOCKSTREAM_API_URL = os.getenv("BLOCKSTREAM_API_URL")
 
 class BlockchainService:
     @staticmethod
-    def get_wallet_info(address: str) -> dict[str, str] | None:
+    def get_wallet_info(address: str) -> dict[str, Any] | None:
+        """Obtém informações da carteira para o endereço especificado."""
         logger.debug(f"Busca dos dados da carteira {address}")
         url = f"{BLOCKSTREAM_API_URL}/address/{address}"
         try:
@@ -20,7 +22,8 @@ class BlockchainService:
             return None
 
     @staticmethod
-    def get_all_transactions(address: str) -> list[dict[str, str]]:
+    def get_all_transactions(address: str) -> list[dict[str, Any]]:
+        """Obtém todas as transações confirmadas para o endereço especificado."""
         logger.debug(f"Busca de todas as transações da carteira {address}")
         txs = []
         last_txid = None

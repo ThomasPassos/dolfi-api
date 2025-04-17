@@ -4,8 +4,8 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.ext.models import Transaction, Wallet, db
 from app.ext.schemas import TransactionSchema, WalletSchema
-from app.services.calculation_service import CalculationService
 from app.services.auth import require_api_key
+from app.services.calculation_service import CalculationService
 
 bp = Blueprint("wallet", __name__)
 
@@ -31,12 +31,7 @@ def get_transactions(address: str, page: int = 1):
     offset = (page - 1) * N_PER_PAGE
     try:
         txs = (
-            db.session.execute(
-                select(Transaction)
-                .where(Transaction.wallet_address == address)
-                .offset(offset)
-                .limit(N_PER_PAGE)
-            )
+            db.session.execute(select(Transaction).where(Transaction.wallet_address == address).offset(offset).limit(N_PER_PAGE))
             .scalars()
             .all()
         )

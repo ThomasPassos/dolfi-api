@@ -12,11 +12,14 @@ def update_wallets_job():
     with scheduler.app.app_context():
         scheduler.app.logger.info("Processo de atualização de dados iniciado")
         calc_service = CalculationService()
-        wallets = db.session.execute(select(Wallet)).scalars().all()  # ! Pode dar b.o
-        if wallets:
-            for wallet in wallets:
-                scheduler.app.logger.info(f"Atualizando carteira {wallet.address}!")
-                count = calc_service.update_wallet(wallet, db)
-                log_str = f"Carteira {wallet.address} atualizada: {count} transações novas!"
-                scheduler.app.logger.info(log_str)
-        scheduler.app.logger.warning("Nenhuma carteira foi retornada da base de dados")
+        wallets = db.session.execute(select(Wallet)).scalars().all()
+        try:
+            if wallets:
+                for wallet in wallets:
+                    scheduler.app.logger.info(f"Atualizando carteira {wallet.address}!")
+                    calc_service.update_wallet(wallet, db)
+                    scheduler.app.logger.info(f"Carteira {wallet.address} atualizada!")
+            else:
+                scheduler.app.logger.warning("Nenhuma carteira foi retornada da base de dados")
+        except Exception as e:
+            scheduler.app.logger.error(f"Erro na tarefa de atualização: {e}")
