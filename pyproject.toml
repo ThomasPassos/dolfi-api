@@ -60,6 +60,8 @@ commit = "git add . ; git commit -a -m"
 build = "sudo docker build -t dolfi ."
 dkrun = "sudo docker run -p 5000:5000 --env-file .flaskenv dolfi"
 rm-all-imgs = "docker rmi $(docker images -q)"
+dev = "git checkout dev"
+main = "git checkout main"
 
 [tool.mypy]
 python_version = "3.12"
