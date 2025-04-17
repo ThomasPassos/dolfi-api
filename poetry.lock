@@ -41,6 +41,18 @@ files = [
 ]
 
 [[package]]
+name = "cachelib"
+version = "0.13.0"
+description = "A collection of cache libraries in the same API interface."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "cachelib-0.13.0-py3-none-any.whl", hash = "sha256:8c8019e53b6302967d4e8329a504acf75e7bc46130291d30188a6e4e58162516"},
+    {file = "cachelib-0.13.0.tar.gz", hash = "sha256:209d8996e3c57595bee274ff97116d1d73c4980b2fd9a34c7846cd07fd2e1a48"},
+]
+
+[[package]]
 name = "certifi"
 version = "2025.1.31"
 description = "Python package for providing Mozilla's CA Bundle."
@@ -219,6 +231,22 @@ files = [
 apscheduler = ">=3.2.0,<4.0.0"
 flask = ">=2.2.5,<4.0.0"
 python-dateutil = ">=2.4.2"
+
+[[package]]
+name = "flask-caching"
+version = "2.3.1"
+description = "Adds caching support to Flask applications."
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "Flask_Caching-2.3.1-py3-none-any.whl", hash = "sha256:d3efcf600e5925ea5a2fcb810f13b341ae984f5b52c00e9d9070392f3ca10761"},
+    {file = "flask_caching-2.3.1.tar.gz", hash = "sha256:65d7fd1b4eebf810f844de7de6258254b3248296ee429bdcb3f741bcbf7b98c9"},
+]
+
+[package.dependencies]
+cachelib = ">=0.9.0"
+Flask = "*"
 
 [[package]]
 name = "flask-marshmallow"
@@ -1184,4 +1212,4 @@ dev = ["black (>=19.3b0) ; python_version >= \"3.6\"", "pytest (>=4.6.2)"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "b3bdde30cbe8ce1bf14250d871f65f09e72d86920c3eb10e91fc72eb2811db57"
+content-hash = "f35068b6506da141c2e42ac5e1c340193650ba0c7a4414abf42a7c08e6a70a89"

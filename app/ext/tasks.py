@@ -12,7 +12,7 @@ def update_wallets_job():
     with scheduler.app.app_context():
         scheduler.app.logger.info("Processo de atualização de dados iniciado")
         calc_service = CalculationService()
-        wallets = db.session.execute(select(Wallet)).scalars().all()
+        wallets = db.session.execute(select(Wallet)).scalars().all()  # ! Pode dar b.o
         if wallets:
             for wallet in wallets:
                 scheduler.app.logger.info(f"Atualizando carteira {wallet.address}!")
