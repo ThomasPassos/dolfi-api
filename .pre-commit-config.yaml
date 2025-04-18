@@ -24,7 +24,6 @@ repos:
         types: [python]
       - id: mypy
         name: mypy
-        entry: poetry run mypy 
-        args: [--exclude "(^app/|gunicorn\.conf)", "."]
+        entry: poetry run mypy --exclude "(^app/|gunicorn\.conf)" .
         language: system
         types: [python]
