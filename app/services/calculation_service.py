@@ -31,7 +31,7 @@ class CalculationService:
         if btc_before == 0:
             logger.warning("BTC price change zerado")
             return Decimal("0")
-        return (btc_today / btc_before) * 100
+        return ((btc_today / btc_before) - 1) * 100
 
     def process_transaction(self, tx: dict[str, Any], address: str) -> dict[Any, Any]:
         try:
