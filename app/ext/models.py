@@ -22,7 +22,7 @@ class Wallet(db.Model):
     transaction_count: Mapped[int] = mapped_column(default=0)
     roa: Mapped[Decimal] = mapped_column(Numeric(18, 3), default=0)
     btc_price_change: Mapped[Decimal] = mapped_column(Numeric(18, 3), default=0)
-    first_transaction_date: Mapped[Optional[datetime]] = mapped_column()
+    first_transaction_date: Mapped[Optional[datetime]] = mapped_column(nullable=False)
     transactions: Mapped[List["Transaction"]] = relationship("Transaction", back_populates="wallet", cascade="all, delete-orphan")
 
 
