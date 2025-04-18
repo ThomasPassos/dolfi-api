@@ -24,6 +24,6 @@ repos:
         types: [python]
       - id: mypy
         name: mypy
-        entry: poetry run mypy app/ --explicit-package-bases
+        entry: poetry run mypy .
         language: system
         types: [python]
