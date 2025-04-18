@@ -39,10 +39,11 @@ def create_app(config_object=Config):
 
         ma.init_app(app)
 
-        from app.ext.tasks import scheduler
+        from app.ext.tasks import scheduler, update_wallets_job
 
         scheduler.init_app(app)
 
+        from app.ext.tasks import update_wallets_job
         # Iniciar o scheduler apenas em ambiente controlado
         if not app.debug and os.getenv("SCHEDULER_ENABLED"):
             scheduler.start()
