@@ -27,5 +27,3 @@ repos:
         entry: poetry run mypy app/ --namespace-packages --explicit-package-bases
         language: system
         types: [python]
-        env:
-          MYPYPATH: "."
