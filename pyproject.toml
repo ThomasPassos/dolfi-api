@@ -35,6 +35,8 @@ package-mode = false
 ruff = "^0.11.2"
 taskipy = "^1.14.1"
 mypy = "^1.15.0"
+pre-commit = "^4.2.0"
+bandit = "^1.8.3"
 
 
 [tool.poetry.group.stubs.dependencies]
