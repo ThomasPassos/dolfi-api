@@ -71,3 +71,5 @@ main = "git checkout main"
 python_version = "3.12"
 ignore_missing_imports = true
 disable_error_code = "name-defined"
+explicit_package_bases = true
+exclude = "^app/"
