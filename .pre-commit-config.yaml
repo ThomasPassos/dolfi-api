@@ -1,7 +1,7 @@
 default_stages: [pre-push]
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0  # Atualizei para uma versão mais recente
+    rev: v4.6.0
     hooks:
       - id: check-yaml
       - id: check-added-large-files
@@ -24,6 +24,8 @@ repos:
         types: [python]
       - id: mypy
         name: mypy
-        entry: poetry run mypy --explicit-package-bases app/
+        entry: poetry run mypy app/ --namespace-packages --explicit-package-bases
         language: system
         types: [python]
+        env:
+          MYPYPATH: "."
