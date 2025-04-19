@@ -2,6 +2,7 @@ from flask import Blueprint, current_app, jsonify
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
+from app.ext.cache import cache
 from app.ext.models import Transaction, Wallet, db
 from app.ext.schemas import TransactionSchema, WalletSchema
 from app.services.auth import require_api_key
@@ -12,6 +13,7 @@ bp = Blueprint("wallet", __name__)
 
 @bp.route("/all", methods=["GET"])
 @require_api_key
+@cache.cached(timeout=600)
 def get_all_wallet():
     current_app.logger.debug("Pegando todas as wallets")
     wallets = db.session.execute(select(Wallet)).scalars().all()
@@ -27,6 +29,7 @@ def get_all_wallet():
 
 @bp.route("/<string:address>", methods=["GET"])
 @require_api_key
+@cache.memoize(timeout=600)
 def get_wallet(address: str):
     current_app.logger.debug(f"Pegando os dados da wallet: {address}")
     wallet = db.session.get(Wallet, address)
@@ -40,7 +43,8 @@ def get_wallet(address: str):
 
 @bp.route("/txs/<string:address>/<int:page>", methods=["GET"])
 @require_api_key
-def get_transactions(address: str, page: int = 1):
+@cache.memoize(timeout=600)
+def get_transactions(address: str, page: int):
     current_app.logger.debug(f"Pegando as txs da carteira: {address}, página {page}")
     N_PER_PAGE = 20
     offset = (page - 1) * N_PER_PAGE
