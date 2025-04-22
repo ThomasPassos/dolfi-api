@@ -44,8 +44,10 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
     @post_dump
     @staticmethod
     def change_date_dump(data, many, **kwargs):
-        date = datetime.strptime(data["first_transaction_date"], "%Y-%m-%dT%H:%M:%S")
-        data["first_transaction_date"] = date.strftime("%d/%m/%Y, %H:%M:%S")
+        if data.get("first_transaction_date"):
+            date = datetime.strptime(data["first_transaction_date"], "%Y-%m-%dT%H:%M:%S")
+            data["first_transaction_date"] = date.strftime("%d/%m/%Y, %H:%M:%S")
+            return data
         return data
 
     @post_dump
@@ -53,6 +55,7 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
     def change_decimal_dump(data, many, **kwargs):
         data["balance_btc"] = float(data["balance_btc"])
         data["balance_usd"] = float(data["balance_usd"])
-        data["btc_price_change"] = float(data["btc_price_change"])
         data["roa"] = float(data["roa"])
+        if data.get("bitcoin_price_change"):
+            data["btc_price_change"] = float(data["btc_price_change"])
         return data
