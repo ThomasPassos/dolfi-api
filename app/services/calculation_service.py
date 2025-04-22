@@ -159,8 +159,6 @@ class CalculationService:
         current_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", None)
         has_new = current_tx_count > wallet.transaction_count
 
-        wallet_data = self.calculate_from_transactions(wallet)
-        wallet_data["transaction_count"] = current_tx_count
         new_txs_ids: Collection[int | None] = []
 
         if has_new:
@@ -173,9 +171,17 @@ class CalculationService:
             new_txs_ids = txs_ids.difference(stored_txids)
             processed_txs = [self.process_transaction(tx, wallet.address) for tx in txs if tx.get("txid") in new_txs_ids]
             transactions = [self.tx_schema.load(tx, session=db.session) for tx in processed_txs if "error" not in tx]
-            db.session.add_all(transactions)
+            try:
+                db.session.add_all(transactions)
+                db.session.commit()
+            except Exception as e:
+                db.session.rollback()
+                logger.debug(f"Erro ao adicionar as novas transações da wallet {wallet.address}\n{e}")
+
             logger.debug(f"Txs da wallet {wallet.address} processadas, Ex: {transactions[0] if transactions else 'nenhuma'}")
 
+        wallet_data = self.calculate_from_transactions(wallet)
+        wallet_data["transaction_count"] = current_tx_count
         wallet = self.wallet_schema.load(wallet_data, instance=wallet, partial=True, session=db.session)
         logger.debug(f"Dados calculados da wallet {wallet.address}: {wallet}")
 
