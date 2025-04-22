@@ -76,12 +76,12 @@ Nesta requisição serão retornados os dados das transações da carteira em qu
 
 ## Tecnologias utilizadas
 
-- A aplicação é desenvolvida em Flask
-- A aplicação é hospedada com Gunicorn
-- Containerizada com Docker
-- O banco de dados utilizado é PostgreSQL
-- Banco de dados gerenciado por SQLAlchemy ORM
-- Serialização e deserialização de Models SQLAlchemy ORM com Marshmallow
-- Cache das rotas é armazenado em Redis
-- Processamento assíncrono com Celery, com mensageria e backend de resultados Redis
-- Implementação de logging com Logoru
+- A aplicação é desenvolvida em **Flask**
+- A aplicação é hospedada com **Gunicorn**
+- Containerizada com **Docker**
+- O banco de dados utilizado é **PostgreSQL**
+- Banco de dados gerenciado por **SQLAlchemy ORM**
+- Serialização e deserialização de Models **SQLAlchemy ORM** com **Marshmallow**
+- Cache das rotas é armazenado em **Redis**
+- Processamento assíncrono com **Celery**, com mensageria e backend de resultados **Redis**
+- Implementação de logging com **Logoru**
