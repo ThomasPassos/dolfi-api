@@ -1,6 +1,6 @@
 # O que é?
 
-Dolfi é uma aplicação desenvolvida em Python, que possui 2 frentes: ela primeiramente é uma buscadora de carteiras rentáveis em suas transações de Bitcoin, e a sua segunda função é disponibilizar essas carteiras para o público. No repositório você encontrará apenas o código da API de dados da segunda função, visite nosso site nesse link: <www.dolfi.cc>
+Dolfi é uma aplicação desenvolvida em Python, que possui 2 frentes: ela primeiramente é uma buscadora de carteiras rentáveis em suas transações de Bitcoin, e a sua segunda função é disponibilizar essas carteiras para o público. No repositório você encontrará apenas o código da API da segunda função, visite nosso site neste link: [www.dolfi.cc](www.dolfi.cc)
 
 ## As rotas de Dolfi
 
@@ -16,7 +16,7 @@ Exemplo:
 "balance_btc": 0.01129175,
 "balance_usd": 958.98,
 "roa": 33.258
-}, ...
+}, 
 ]
 ```
 
@@ -70,6 +70,6 @@ Nesta requisição serão retornados os dados das transações da carteira em qu
 "transaction_date": "09/04/2025, 17:03:58",
 "transaction_id": "<transaction_id>",
 "wallet_address": "<address>"
-}, ...
+}, 
 ]
 ```
