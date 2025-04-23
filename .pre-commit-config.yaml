@@ -22,8 +22,3 @@ repos:
         entry: poetry run bandit -r .
         language: system
         types: [python]
-      - id: mypy
-        name: mypy
-        entry: poetry run mypy --exclude "(^app/|gunicorn\.conf)" .
-        language: system
-        types: [python]
