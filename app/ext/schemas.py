@@ -17,19 +17,23 @@ class TransactionSchema(ma.SQLAlchemyAutoSchema):
 
     transaction_date = fields.DateTime()
 
-    @post_dump
     @staticmethod
-    def change_date_dump(data, many, *kwargs):
+    def change_date_dump(data):
         date = datetime.strptime(data["transaction_date"], "%Y-%m-%dT%H:%M:%S")
         data["transaction_date"] = date.strftime("%d/%m/%Y, %H:%M:%S")
         return data
 
-    @post_dump
     @staticmethod
-    def change_decimal_dump(data, many, **kwargs):
+    def change_decimal_dump(data):
         data["balance_btc"] = float(data["balance_btc"])
         data["balance_usd"] = float(data["balance_usd"])
         return data
+
+    @post_dump
+    def format_json(self, data, many, **kwargs):
+        data = self.change_date_dump(data)
+        data = self.change_decimal_dump(data)
+        return {"tx": data}
 
 
 class WalletSchema(ma.SQLAlchemyAutoSchema):
@@ -41,21 +45,25 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
     first_transaction_date = fields.DateTime()
     transactions = Nested(TransactionSchema, many=True, exclude=("wallet_address",))
 
-    @post_dump
     @staticmethod
-    def change_date_dump(data, many, **kwargs):
+    def change_date_dump(data):
         if data.get("first_transaction_date"):
             date = datetime.strptime(data["first_transaction_date"], "%Y-%m-%dT%H:%M:%S")
             data["first_transaction_date"] = date.strftime("%d/%m/%Y, %H:%M:%S")
             return data
         return data
 
-    @post_dump
     @staticmethod
-    def change_decimal_dump(data, many, **kwargs):
+    def change_decimal_dump(data):
         data["balance_btc"] = float(data["balance_btc"])
         data["balance_usd"] = float(data["balance_usd"])
         data["roa"] = float(data["roa"])
         if data.get("bitcoin_price_change"):
             data["btc_price_change"] = float(data["btc_price_change"])
         return data
+
+    @post_dump
+    def format_json(self, data, many, **kwargs):
+        data = self.change_date_dump(data)
+        data = self.change_decimal_dump(data)
+        return {"wallet": data}

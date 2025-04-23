@@ -24,7 +24,7 @@ def get_all_wallet():
         many=True, exclude=("transactions", "btc_price_change", "first_transaction_date", "transaction_count")
     ).dump(wallets)
     current_app.logger.debug("Retornados os dados de todas as carteiras")
-    return jsonify(wallets_data), 200
+    return jsonify({"wallets": wallets_data}), 200
 
 
 @bp.route("/<string:address>", methods=["GET"])
@@ -62,7 +62,7 @@ def get_transactions(address: str, page: int):
         return jsonify({"error": "Transações não encontradas"}), 404
     txs_data = TransactionSchema(many=True).dump(txs)
     current_app.logger.debug(f"Txs do {address} retornadas: {len(txs_data)} transações")
-    return jsonify(txs_data), 200
+    return jsonify({"txs": txs_data}), 200
 
 
 @bp.route("/<string:address>", methods=["POST"])

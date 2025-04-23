@@ -18,4 +18,3 @@ class Config:
     CACHE_TYPE = "RedisCache"
     CACHE_DEFAULT_TIMEOUT = 600
     CACHE_REDIS_URL = os.getenv("CACHE_REDIS_URL")
-    CACHE_REDIS_DB = 0
