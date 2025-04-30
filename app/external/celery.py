@@ -6,11 +6,7 @@ celery = Celery(__name__)
 
 def init_celery(app: Flask):
     celery.conf.update(app.config)
-    celery.conf.update(
-        task_serializer='pickle',
-        result_serializer='pickle',
-        accept_content=['pickle', 'json']
-    )
+    celery.conf.update(task_serializer="pickle", result_serializer="pickle", accept_content=["pickle", "json"])
 
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):

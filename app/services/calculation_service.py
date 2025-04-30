@@ -26,6 +26,18 @@ class DolfiCalculator:
         logger.warning(f"ROA zerado: invested_usd = {invested_usd}")
         return Decimal("0")
 
+    def get_wallet_info(self, address: str):
+        wallet_info = self.blockchain.get_wallet_info(address)
+        if not wallet_info:
+            raise Exception
+        return wallet_info
+
+    def get_txs(self, address: str):
+        txs = self.blockchain.get_all_transactions(address)
+        if not txs:
+            raise Exception
+        return txs
+
     def calculate_btc_price_change(self, btc_today: Decimal, first_tx_dt: Union[int, float]) -> Decimal:
         btc_before = Decimal(str(self.prices.get_bitcoin_price(first_tx_dt)))
         if btc_before == 0:
