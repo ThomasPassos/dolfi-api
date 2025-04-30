@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from flask_marshmallow import Marshmallow
 from marshmallow import fields, post_dump
 from marshmallow_sqlalchemy.fields import Nested
@@ -15,13 +13,7 @@ class TransactionSchema(ma.SQLAlchemyAutoSchema):
         include_fk = True
         load_instance = True
 
-    transaction_date = fields.DateTime()
-
-    @staticmethod
-    def change_date_dump(data):
-        date = datetime.strptime(data["transaction_date"], "%Y-%m-%dT%H:%M:%S")
-        data["transaction_date"] = date.strftime("%d/%m/%Y, %H:%M:%S")
-        return data
+    transaction_date = fields.DateTime(format="timestamp")
 
     @staticmethod
     def change_decimal_dump(data):
@@ -31,7 +23,6 @@ class TransactionSchema(ma.SQLAlchemyAutoSchema):
 
     @post_dump
     def format_json(self, data, many, **kwargs):
-        data = self.change_date_dump(data)
         data = self.change_decimal_dump(data)
         return {"tx": data}
 
@@ -42,16 +33,8 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
         include_relationships = True
         load_instance = True
 
-    first_transaction_date = fields.DateTime()
+    first_transaction_date = fields.DateTime(format="timestamp")
     transactions = Nested(TransactionSchema, many=True, exclude=("wallet_address",))
-
-    @staticmethod
-    def change_date_dump(data):
-        if data.get("first_transaction_date"):
-            date = datetime.strptime(data["first_transaction_date"], "%Y-%m-%dT%H:%M:%S")
-            data["first_transaction_date"] = date.strftime("%d/%m/%Y, %H:%M:%S")
-            return data
-        return data
 
     @staticmethod
     def change_decimal_dump(data):
@@ -64,6 +47,5 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
 
     @post_dump
     def format_json(self, data, many, **kwargs):
-        data = self.change_date_dump(data)
         data = self.change_decimal_dump(data)
         return {"wallet": data}
