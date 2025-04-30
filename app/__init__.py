@@ -39,10 +39,8 @@ def create_app(config_object=Config):
         ma.init_app(app)
 
         # Inicialização do Celery
-        from app.external.celery import init_app
 
         # init_app(app)
-
         # Registro de blueprints
         from app.routes import bp as wallet_bp
 
