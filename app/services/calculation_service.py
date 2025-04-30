@@ -35,8 +35,8 @@ class DolfiCalculator:
 
     def process_transaction(self, tx: dict[str, Any], address: str) -> dict[Any, Any]:
         try:
-            tx_date = tx["status"]["block_time"]
-            btc_price = Decimal(str(self.prices.get_bitcoin_price(int(tx_date))))
+            tx_date = int(tx["status"]["block_time"])
+            btc_price = Decimal(str(self.prices.get_bitcoin_price(tx_date)))
 
             total_received = Decimal("0")
             total_spent = Decimal("0")
@@ -55,7 +55,6 @@ class DolfiCalculator:
             net_usd = net_btc * btc_price
 
             is_incoming = net_btc >= 0
-            tx_date = datetime.fromtimestamp(tx_date).isoformat()
             return {
                 "wallet_address": address,
                 "transaction_date": tx_date,
@@ -84,9 +83,7 @@ class DolfiCalculator:
         processed_txs = []
         invested_usd = Decimal("0")
         returned_usd = Decimal("0")
-
-        first_tx_date = txs[-1]["status"]["block_time"]
-        first_tx_date_formatted = datetime.fromtimestamp(first_tx_date).isoformat()
+        first_tx_date = int(txs[-1]["status"]["block_time"])
 
         for tx in txs:
             processed = self.process_transaction(tx, address)
@@ -100,8 +97,8 @@ class DolfiCalculator:
                 invested_usd += abs(balance_usd)
             else:
                 returned_usd += abs(balance_usd)
-        logger.debug(f"Txs da wallet {address} processados: {processed_txs[0] if processed_txs else 'nenhuma'}")
 
+        logger.debug(f"Txs da wallet {address} processados: {processed_txs[0] if processed_txs else 'nenhuma'}")
         wallet_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", len(processed_txs))
         funded = Decimal(str(wallet_info.get("chain_stats", {}).get("funded_txo_sum", 0))) / Decimal("1e8")
         spent = Decimal(str(wallet_info.get("chain_stats", {}).get("spent_txo_sum", 0))) / Decimal("1e8")
@@ -111,7 +108,7 @@ class DolfiCalculator:
         balance_usd = balance_btc * current_price
 
         roa = self.calculate_roa(invested_usd, balance_usd, returned_usd)
-        btc_price_change = self.calculate_btc_price_change(current_price, int(first_tx_date))
+        btc_price_change = self.calculate_btc_price_change(current_price, first_tx_date)
 
         wallet_data = {
             "address": address,
@@ -120,7 +117,7 @@ class DolfiCalculator:
             "transaction_count": wallet_tx_count,
             "btc_price_change": btc_price_change,
             "roa": roa,
-            "first_transaction_date": first_tx_date_formatted,
+            "first_transaction_date": first_tx_date,
         }
         logger.debug(f"Dados da wallet {address} processados: {wallet_data}")
         return wallet_data, processed_txs
@@ -141,9 +138,9 @@ class DolfiCalculator:
 
         current_price = Decimal(str(self.prices.get_bitcoin_price(datetime.now().timestamp())))
         balance_usd = balance_btc * current_price
-
         roa = self.calculate_roa(invested_usd, balance_usd, returned_usd)
-        btc_price_change = self.calculate_btc_price_change(current_price, wallet.first_transaction_date.timestamp())
+        btc_price_change = self.calculate_btc_price_change(current_price, wallet.first_transaction_date)
+
         return {
             "balance_btc": balance_btc,
             "balance_usd": balance_usd,
@@ -158,7 +155,6 @@ class DolfiCalculator:
 
         current_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", None)
         has_new = current_tx_count > wallet.transaction_count
-
         new_txs_ids: Collection[int | None] = []
 
         if has_new:
@@ -171,6 +167,7 @@ class DolfiCalculator:
             new_txs_ids = txs_ids.difference(stored_txids)
             processed_txs = [self.process_transaction(tx, wallet.address) for tx in txs if tx.get("txid") in new_txs_ids]
             transactions = [self.tx_schema.load(tx, session=db.session) for tx in processed_txs if "error" not in tx]
+
             try:
                 db.session.add_all(transactions)
                 db.session.commit()
