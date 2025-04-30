@@ -24,6 +24,7 @@ class TransactionSchema(ma.SQLAlchemyAutoSchema):
     @post_dump
     def format_json(self, data, many, **kwargs):
         data = self.change_decimal_dump(data)
+        data["transaction_date"] = int(data["transaction_date"])
         return data
 
 
@@ -48,4 +49,5 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
     @post_dump
     def format_json(self, data, many, **kwargs):
         data = self.change_decimal_dump(data)
+        data["first_transaction_date"] = int(data["first_transaction_date"])
         return data
