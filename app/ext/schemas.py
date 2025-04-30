@@ -24,7 +24,7 @@ class TransactionSchema(ma.SQLAlchemyAutoSchema):
     @post_dump
     def format_json(self, data, many, **kwargs):
         data = self.change_decimal_dump(data)
-        return {"tx": data}
+        return data
 
 
 class WalletSchema(ma.SQLAlchemyAutoSchema):
@@ -48,4 +48,4 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
     @post_dump
     def format_json(self, data, many, **kwargs):
         data = self.change_decimal_dump(data)
-        return {"wallet": data}
+        return data
