@@ -1,20 +1,19 @@
 from datetime import datetime
 from decimal import Decimal
 
-from celery import chord, group
+from celery import chord, group, shared_task
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.external.celery import celery
 from app.external.models import Wallet, db
 from app.services.calculation_service import DolfiCalculator
 
 calc = DolfiCalculator()
 
 
-@celery.task(bind=True)
-def update_wallets(self, max_retries=1):
+@shared_task(bind=True, max_retries=1)
+def update_wallets(self):
     try:
         wallets = db.session.execute(select(Wallet)).scalars().all()
         if wallets:
@@ -26,7 +25,7 @@ def update_wallets(self, max_retries=1):
         raise self.retry(exc=e, countdown=20)
 
 
-@celery.task(bind=True, max_retries=5)
+@shared_task(bind=True, max_retries=5)
 def update_wallet(self, wallet: Wallet):
     try:
         logger.info(f"Atualizando carteira {wallet.address}!")
@@ -35,7 +34,7 @@ def update_wallet(self, wallet: Wallet):
         raise self.retry(exc=e, countdown=5)
 
 
-@celery.task(bind=True, max_retries=5)
+@shared_task(bind=True, max_retries=5)
 def insert_wallet(self, address: str) -> None:
     try:
         info = calc.get_wallet_info(address)
@@ -57,7 +56,7 @@ def insert_wallet(self, address: str) -> None:
         raise self.retry(exc=e, countdown=20)
 
 
-@celery.task(bind=True, max_retries=10)
+@shared_task(bind=True, max_retries=10)
 def process_transaction(self, tx, address) -> dict:
     try:
         tx_date = int(tx["status"]["block_time"])
@@ -92,7 +91,7 @@ def process_transaction(self, tx, address) -> dict:
         raise self.retry(exc=e, countdown=5)
 
 
-@celery.task(bind=True, max_retries=10)
+@shared_task(bind=True, max_retries=10)
 def calculate_wallet_data(self, wallet_info: dict, txs: list):
     try:
         invested_usd = Decimal("0")

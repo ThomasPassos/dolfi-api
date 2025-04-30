@@ -1,16 +1,15 @@
-from celery import Celery
+from celery import Celery, Task
 from flask import Flask
 
-celery = Celery(__name__)
 
-
-def init_celery(app: Flask):
-    celery.conf.update(app.config)
-    celery.conf.update(task_serializer="pickle", result_serializer="pickle", accept_content=["pickle", "json"])
-
-    class ContextTask(celery.Task):
-        def __call__(self, *args, **kwargs):
+def init_app(app: Flask) -> Celery:
+    class FlaskTask(Task):
+        def __call__(self, *args: object, **kwargs: object) -> object:
             with app.app_context():
                 return self.run(*args, **kwargs)
 
-    celery.Task = ContextTask
+    celery_app = Celery(app.name, task_cls=FlaskTask)
+    celery_app.config_from_object(app.config["CELERY"])
+    celery_app.set_default()
+    app.extensions["celery"] = celery_app
+    return celery_app
