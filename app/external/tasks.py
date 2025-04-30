@@ -1,7 +1,7 @@
 from flask_apscheduler import APScheduler
 from sqlalchemy import select
 
-from app.ext.models import Wallet, db
+from app.external.models import Wallet, db
 from app.services.calculation_service import DolfiCalculator
 
 scheduler = APScheduler()

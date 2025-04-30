@@ -19,7 +19,7 @@ def create_app(config_object=Config):
         if config_object:
             app.config.from_object(config_object)
 
-        from app.ext.logging import InterceptHandler
+        from app.external.logging import InterceptHandler
 
         app.logger.handlers = [InterceptHandler()]
         if not app.debug:
@@ -27,24 +27,24 @@ def create_app(config_object=Config):
 
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
         # Inicialização das extensões
-        from app.ext.models import db
+        from app.external.models import db
 
         db.init_app(app)
 
-        from app.ext.cache import cache
+        from app.external.cache import cache
 
         cache.init_app(app)
 
-        from app.ext.schemas import ma
+        from app.external.schemas import ma
 
         ma.init_app(app)
 
-        from app.ext.tasks import scheduler
+        from app.external.tasks import scheduler
 
         scheduler.init_app(app)
 
         # Iniciar o scheduler apenas em ambiente controlado
-        from app.ext.tasks import update_wallets_job  # noqa: F401
+        from app.external.tasks import update_wallets_job  # noqa: F401
 
         if not app.debug and os.getenv("SCHEDULER_ENABLED"):
             scheduler.start()
