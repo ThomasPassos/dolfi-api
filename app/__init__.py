@@ -1,5 +1,4 @@
 import logging
-import os
 import traceback
 
 from dotenv import load_dotenv
@@ -39,15 +38,10 @@ def create_app(config_object=Config):
 
         ma.init_app(app)
 
-        from app.external.tasks import scheduler
+        # Inicialização do Celery
+        from app.external.celery import init_app
 
-        scheduler.init_app(app)
-
-        # Iniciar o scheduler apenas em ambiente controlado
-        from app.external.tasks import update_wallets_job  # noqa: F401
-
-        if not app.debug and os.getenv("SCHEDULER_ENABLED"):
-            scheduler.start()
+        # init_app(app)
 
         # Registro de blueprints
         from app.routes import bp as wallet_bp

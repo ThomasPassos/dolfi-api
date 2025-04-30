@@ -18,3 +18,7 @@ class Config:
     CACHE_TYPE = "RedisCache"
     CACHE_DEFAULT_TIMEOUT = 600
     CACHE_REDIS_URL = os.getenv("CACHE_REDIS_URL")
+    # ... outras configurações
+    CELERY_BROKER_URL = os.getenv("CACHE_REDIS_URL")
+    CELERY_RESULT_BACKEND = os.getenv("CACHE_REDIS_URL")
+    CELERY_TIMEZONE = "America/Sao_Paulo"  # Ajuste para seu fuso horário
