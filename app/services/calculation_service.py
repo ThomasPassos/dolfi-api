@@ -11,7 +11,7 @@ from app.services.blockchain_service import BlockchainService
 from app.services.price_service import PriceService
 
 
-class CalculationService:
+class DolfiCalculator:
     def __init__(self):
         self.blockchain = BlockchainService()
         self.prices = PriceService()

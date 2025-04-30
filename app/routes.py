@@ -6,7 +6,7 @@ from app.ext.cache import cache
 from app.ext.models import Transaction, Wallet, db
 from app.ext.schemas import TransactionSchema, WalletSchema
 from app.services.auth import require_api_key
-from app.services.calculation_service import CalculationService
+from app.services.calculation_service import DolfiCalculator
 
 bp = Blueprint("wallet", __name__)
 
@@ -74,7 +74,7 @@ def add_wallet(address: str):
         current_app.logger.warning(f"Carteira {address} já existe!")
         return jsonify({"error": "Carteira já cadastrada."}), 400
 
-    calc_service = CalculationService()
+    calc_service = DolfiCalculator()
     wallet_data, tx_list = calc_service.calculate_wallet_data(address)
 
     if wallet_data is None:

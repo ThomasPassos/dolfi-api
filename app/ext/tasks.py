@@ -2,7 +2,7 @@ from flask_apscheduler import APScheduler
 from sqlalchemy import select
 
 from app.ext.models import Wallet, db
-from app.services.calculation_service import CalculationService
+from app.services.calculation_service import DolfiCalculator
 
 scheduler = APScheduler()
 
@@ -11,7 +11,7 @@ scheduler = APScheduler()
 def update_wallets_job():
     with scheduler.app.app_context():
         scheduler.app.logger.info("Processo de atualização de dados iniciado")
-        calc_service = CalculationService()
+        calc_service = DolfiCalculator()
         wallets = db.session.execute(select(Wallet)).scalars().all()
         try:
             if wallets:
