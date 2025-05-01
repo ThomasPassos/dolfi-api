@@ -94,33 +94,6 @@ def add_wallet(address: str):
     return jsonify({"message": "Carteira inserida e dados calculados."}), 201
 
 
-@wallet_bp.route("/async/<string:address>", methods=["POST"])
-@require_api_key
-def add_walleta(address: str):
-    current_app.logger.info(f"Adição da carteira {address} iniciada!")
-    calc = DolfiCalculator()
-
-    wallet = db.session.get(Wallet, address)
-    if wallet:
-        current_app.logger.warning(f"Carteira {address} já existe!")
-        return jsonify({"error": "Carteira já cadastrada."}), 400
-
-    wallet_info = calc.get_wallet_info(address)
-    if not wallet_info:
-        current_app.logger.warning(f"Falha ao obter dados da carteira {address}!")
-        return jsonify({"error": "Falha ao obter dados da carteira."}), 500
-
-    txs = calc.get_txs(address)
-    pipeline = chord((process_transaction.s(tx, address) for tx in txs), calculate_wallet_data.s(wallet_info))
-    complete_pipeline = chain(pipeline | insert_data_in_db.s())
-    response = complete_pipeline().get()
-    if response.get("sucess"):
-        current_app.logger.info(f"Carteira {address} e transações adicionadas com sucesso!")
-        return jsonify({"message": "Carteira inserida e dados calculados."}), 201
-    current_app.logger.error(f"Falha ao inserir a carteira {address}")
-    return jsonify({"message": "Erro ao inserir a carteira"}), 500
-
-
 @wallet_bp.route("/update", methods=["UPDATE"])
 @require_api_key
 def update_wallets():

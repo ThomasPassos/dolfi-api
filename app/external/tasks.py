@@ -1,7 +1,5 @@
-from datetime import datetime
 from decimal import Decimal
 from typing import Any
-
 from celery import chain, group, shared_task
 from loguru import logger
 from sqlalchemy import select
@@ -82,23 +80,6 @@ def load_new_txs(new_txs: list):
 
 
 @shared_task
-def insert_data_in_db(*args) -> dict[str, Any]:
-    logger.info(f"{args}")
-    wallet_data = args[0][0]
-    txs = args[0][1]
-    wallet = calc.wallet_schema.load(wallet_data, session=db.session)
-    transactions = calc.tx_schema.load(txs, session=db.session, many=True)
-    try:
-        db.session.add(wallet)
-        db.session.add_all(transactions)
-        db.session.commit()
-        return {"sucess": True}
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return {"sucess": False, "error": e}
-
-
-@shared_task
 def process_transaction(tx, address) -> dict:
     tx_date = int(tx["status"]["block_time"])
     btc_price = calc.prices.get_bitcoin_price(tx_date)
@@ -128,36 +109,3 @@ def process_transaction(tx, address) -> dict:
         "is_incoming": is_incoming,
         "transaction_id": tx.get("txid"),
     }
-
-
-@shared_task
-def calculate_wallet_data(txs: list, wallet_info: dict):
-    invested_usd = Decimal("0")
-    returned_usd = Decimal("0")
-    for tx in txs:
-        balance_btc = tx["balance_btc"]
-        balance_usd = tx["balance_usd"]
-        if balance_btc > 0:
-            invested_usd += abs(balance_usd)
-        else:
-            returned_usd += abs(balance_usd)
-    sorted_txs = sorted(txs, key=lambda x: x["transaction_date"])
-    first_tx_date = sorted_txs[-1]["transaction_date"]
-    tx_count = wallet_info.get("chain_stats", {}).get("tx_count", len(txs))
-
-    funded = Decimal(str(wallet_info.get("chain_stats", {}).get("funded_txo_sum", 0))) / Decimal("1e8")
-    spent = Decimal(str(wallet_info.get("chain_stats", {}).get("spent_txo_sum", 0))) / Decimal("1e8")
-    balance_btc = funded - spent
-    current_price = Decimal(str(calc.prices.get_bitcoin_price(datetime.now().timestamp())))
-    balance_usd = balance_btc * current_price
-    roa = calc.calculate_roa(invested_usd, balance_usd, returned_usd)
-    btc_price_change = calc.calculate_btc_price_change(current_price, first_tx_date)
-    return {
-        "address": wallet_info.get("address"),
-        "balance_btc": balance_btc,
-        "balance_usd": balance_usd,
-        "transaction_count": tx_count,
-        "btc_price_change": btc_price_change,
-        "roa": roa,
-        "first_transaction_date": first_tx_date,
-    }, txs
