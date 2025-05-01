@@ -1,4 +1,3 @@
-from celery import chain, chord
 from flask import Blueprint, current_app, jsonify
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -6,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.external.cache import cache
 from app.external.models import Wallet, db
 from app.external.schemas import WalletSchema
-from app.external.tasks import calculate_wallet_data, insert_data_in_db, process_transaction, update_all_wallets
+from app.external.tasks import update_all_wallets
 from app.services.auth import require_api_key
 from app.services.calculation_service import DolfiCalculator
 

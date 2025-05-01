@@ -1,5 +1,5 @@
 from decimal import Decimal
-from typing import Any
+
 from celery import chain, group, shared_task
 from loguru import logger
 from sqlalchemy import select
