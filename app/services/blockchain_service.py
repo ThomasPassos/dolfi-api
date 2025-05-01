@@ -1,10 +1,9 @@
-import os
 from typing import Any
 
 import requests
 from loguru import logger
 
-BLOCKSTREAM_API_URL = os.getenv("BLOCKSTREAM_API_URL")
+BLOCKSTREAM_API_URL = "https://blockstream.info/api"
 
 
 class BlockchainService:

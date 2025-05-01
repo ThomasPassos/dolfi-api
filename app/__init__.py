@@ -39,14 +39,14 @@ def create_app(config_object=Config):
         ma.init_app(app)
 
         # Inicialização do Celery
-        from app.external.celery import init_app
+        import app.external.celery as cl
 
-        # init_app(app)
+        cl.init_app(app)
 
         # Registro de blueprints
-        from app.routes import bp as wallet_bp
+        import app.blueprints as bp
 
-        app.register_blueprint(wallet_bp)
+        bp.init_app(app)
 
         Talisman(app, force_https=False, content_security_policy=None)
         return app
