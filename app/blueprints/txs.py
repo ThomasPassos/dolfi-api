@@ -13,7 +13,7 @@ txs_bp = Blueprint("transaction", __name__)
 @txs_bp.route("/txs/<string:address>/<int:page>", methods=["GET"])
 @require_api_key
 @cache.memoize(timeout=600)
-def get_transactions(address: str, page: int):
+def get_txs(address: str, page: int):
     current_app.logger.debug(f"Pegando as txs da carteira: {address}, página {page}")
     N_PER_PAGE = 20
     offset = (page - 1) * N_PER_PAGE
@@ -32,3 +32,17 @@ def get_transactions(address: str, page: int):
     txs_data = TransactionSchema(many=True).dump(txs)
     current_app.logger.debug(f"Txs do {address} retornadas: {len(txs_data)} transações")
     return jsonify({"txs": txs_data}), 200
+
+
+@txs_bp.route("/last_txs", methods=["GET"])
+@require_api_key
+@cache.memoize(timeout=600)
+def get_last_txs():
+    current_app.logger.debug("Retornando as 10 últimas txs")
+    try:
+        txs = select(Transaction).order_by(Transaction.transaction_date.desc()).limit(10)
+        response = TransactionSchema(many=True, incluce=("address", "transaction_date", "balance_usd")).jsonify(txs)
+    except Exception as e:
+        current_app.logger.error(f"Falha ao retornar as últimas txs: {e}")
+        return {"message": "Falha ao retornar as transações"}, 500
+    return response, 200
