@@ -29,14 +29,25 @@ class DolfiCalculator:
     def get_wallet_info(self, address: str):
         wallet_info = self.blockchain.get_wallet_info(address)
         if not wallet_info:
-            raise Exception
+            return None, None
         return wallet_info
 
     def get_txs(self, address: str):
         txs = self.blockchain.get_all_transactions(address)
         if not txs:
-            raise Exception
+            return None, None
         return txs
+
+    def has_new_txs(self, wallet: Wallet):
+        try:
+            wallet_info = self.get_wallet_info(wallet.address)
+            current_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", None)
+            has_new = current_tx_count > wallet.transaction_count
+            if has_new:
+                return True
+            return False
+        except Exception:
+            return False
 
     def calculate_btc_price_change(self, btc_today: Decimal, first_tx_dt: Union[int, float]) -> Decimal:
         btc_before = Decimal(str(self.prices.get_bitcoin_price(first_tx_dt)))

@@ -1,9 +1,6 @@
-import os
-
-
 class Config:
     # SQLAlchemy Config
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URI")
+    SQLALCHEMY_DATABASE_URI = "postgresql://postgres:pYOeKwirVaEVfzCbTcJAgCWCASJxAhXF@centerbeam.proxy.rlwy.net:22522/railway"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ENGINE_OPTIONS = {
         "pool_pre_ping": True,
@@ -17,8 +14,10 @@ class Config:
     # Cache Config
     CACHE_TYPE = "RedisCache"
     CACHE_DEFAULT_TIMEOUT = 600
-    CACHE_REDIS_URL = os.getenv("CACHE_REDIS_URL")
+    CACHE_REDIS_URL = "redis://default:YQByOHmGyTRwOWqGknFnwDkXgwiuNOtS@shuttle.proxy.rlwy.net:44861"
     # ... outras configurações
-    CELERY_BROKER_URL = os.getenv("CACHE_REDIS_URL")
-    CELERY_RESULT_BACKEND = os.getenv("CACHE_REDIS_URL")
-    CELERY_TIMEZONE = "America/Sao_Paulo"  # Ajuste para seu fuso horário
+    CELERY = {
+        "broker_url": "redis://default:YQByOHmGyTRwOWqGknFnwDkXgwiuNOtS@shuttle.proxy.rlwy.net:44861",
+        "result_backend": "redis://default:YQByOHmGyTRwOWqGknFnwDkXgwiuNOtS@shuttle.proxy.rlwy.net:44861",
+        "TIMEZONE": "America/Sao_Paulo",
+    }
