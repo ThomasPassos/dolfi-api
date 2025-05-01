@@ -17,13 +17,16 @@ class TransactionSchema(ma.SQLAlchemyAutoSchema):
 
     @staticmethod
     def change_decimal_dump(data):
-        data["balance_btc"] = float(data["balance_btc"])
-        data["balance_usd"] = float(data["balance_usd"])
+        if data.get("balance_btc"):
+            data["balance_btc"] = float(data["balance_btc"])
+        if data.get("balance_usd"):
+            data["balance_usd"] = float(data["balance_usd"])
         return data
 
     @post_dump
     def format_json(self, data, many, **kwargs):
         data = self.change_decimal_dump(data)
+        print(data)
         data["transaction_date"] = int(data["transaction_date"])
         return data
 

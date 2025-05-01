@@ -40,8 +40,8 @@ def get_txs(address: str, page: int):
 def get_last_txs():
     current_app.logger.debug("Retornando as 10 últimas txs")
     try:
-        txs = select(Transaction).order_by(Transaction.transaction_date.desc()).limit(10)
-        response = TransactionSchema(many=True, incluce=("address", "transaction_date", "balance_usd")).jsonify(txs)
+        txs = db.session.execute(select(Transaction).order_by(Transaction.transaction_date.desc()).limit(10)).scalars()
+        response = TransactionSchema(many=True, only=("wallet_address", "transaction_date", "balance_usd")).jsonify(txs)
     except Exception as e:
         current_app.logger.error(f"Falha ao retornar as últimas txs: {e}")
         return {"message": "Falha ao retornar as transações"}, 500
