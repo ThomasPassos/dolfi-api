@@ -2,6 +2,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import List
 
+from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Numeric
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
@@ -12,7 +13,7 @@ class Base(DeclarativeBase):
 
 
 db = SQLAlchemy(model_class=Base)
-
+migrate = Migrate()
 
 class Wallet(db.Model):
     __tablename__ = "wallet"
