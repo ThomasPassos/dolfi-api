@@ -15,6 +15,7 @@ class Base(DeclarativeBase):
 db = SQLAlchemy(model_class=Base)
 migrate = Migrate()
 
+
 class Wallet(db.Model):
     __tablename__ = "wallet"
     address: Mapped[str] = mapped_column(primary_key=True)

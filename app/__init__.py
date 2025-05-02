@@ -4,7 +4,6 @@ import traceback
 from dotenv import load_dotenv
 from flask import Flask
 from flask_talisman import Talisman
-from flask_migrate import Migrate
 from loguru import logger
 from werkzeug.middleware.proxy_fix import ProxyFix
 
