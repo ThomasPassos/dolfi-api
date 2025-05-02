@@ -18,11 +18,7 @@ def get_txs(address: str, page: int):
     N_PER_PAGE = 20
     offset = (page - 1) * N_PER_PAGE
     try:
-        txs = (
-            db.session.execute(select(Transaction).where(Transaction.wallet_address == address).offset(offset).limit(N_PER_PAGE))
-            .scalars()
-            .all()
-        )
+        txs = db.session.scalars(select(Transaction).filter_by(wallet_address=address).offset(offset).limit(N_PER_PAGE)).all()
     except SQLAlchemyError as e:
         current_app.logger.error(f"Erro ao pegar as txs da wallet {address}:\n{e}")
         return jsonify({"message": "Falha ao retornar as transações"}), 500
@@ -40,7 +36,7 @@ def get_txs(address: str, page: int):
 def get_last_txs():
     current_app.logger.debug("Retornando as 10 últimas txs")
     try:
-        txs = db.session.execute(select(Transaction).order_by(Transaction.transaction_date.desc()).limit(10)).scalars()
+        txs = db.session.scalars(select(Transaction).order_by(Transaction.transaction_date.desc()).limit(10)).all()
         response = TransactionSchema(many=True, only=("wallet_address", "transaction_date", "balance_usd")).jsonify(txs)
         current_app.logger.debug("10 últimas transações retornadas com sucesso")
         return response, 200

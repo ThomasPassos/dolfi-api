@@ -14,7 +14,7 @@ calc = DolfiCalculator()
 @shared_task
 def update_all_wallets() -> dict[str, str]:
     logger.debug("Iniciando atualização de todas as carteiras")
-    wallets = db.session.execute(select(Wallet)).scalars().all()
+    wallets = db.session.scalars(select(Wallet)).all()
     if wallets:
         wallets_to_update = set(filter(calc.has_new_txs, wallets))
         wallets_to_recalculate = set(wallets).difference(wallets_to_update)

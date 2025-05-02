@@ -17,7 +17,7 @@ wallet_bp = Blueprint("wallet", __name__)
 @cache.cached(timeout=600)
 def get_all_wallet():
     current_app.logger.debug("Pegando todas as wallets")
-    wallets = db.session.execute(select(Wallet)).scalars().all()
+    wallets = db.session.scalars(select(Wallet)).all()
     if not wallets:
         current_app.logger.warning("Não existem wallets salvas")
         return jsonify({"error": "Carteiras não encontradas"}), 404

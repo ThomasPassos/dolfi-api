@@ -167,7 +167,7 @@ class DolfiCalculator:
             "balance_usd": balance_usd,
             "btc_price_change": btc_price_change,
             "roa": roa,
-            "transaction_count": len(wallet.transactions)
+            "transaction_count": len(wallet.transactions),
         }
 
     def update_wallet(self, wallet: Wallet, db: SQLAlchemy) -> int | None:
