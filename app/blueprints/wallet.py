@@ -91,11 +91,3 @@ def add_wallet(address: str):
 
     current_app.logger.info(f"Carteira {address} e transações adicionadas com sucesso!")
     return jsonify({"message": "Carteira inserida e dados calculados."}), 201
-
-
-@wallet_bp.route("/update", methods=["UPDATE"])
-@require_api_key
-def update_wallets():
-    res = update_all_wallets()
-    print(res)
-    return jsonify({"bololo": "hahah"})
