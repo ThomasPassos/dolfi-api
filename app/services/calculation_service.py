@@ -50,7 +50,7 @@ class DolfiCalculator:
             return False
 
     def calculate_btc_price_change(self, btc_today: Decimal, first_tx_dt: Union[int, float]) -> Decimal:
-        btc_before = Decimal(str(self.prices.get_bitcoin_price(first_tx_dt)))
+        btc_before = self.prices.get_bitcoin_price(first_tx_dt)
         if btc_before == 0:
             logger.warning("BTC price change zerado")
             return Decimal("0")
@@ -59,7 +59,7 @@ class DolfiCalculator:
     def process_transaction(self, tx: dict[str, Any], address: str) -> dict[Any, Any]:
         try:
             tx_date = int(tx["status"]["block_time"])
-            btc_price = Decimal(str(self.prices.get_bitcoin_price(tx_date)))
+            btc_price = self.prices.get_bitcoin_price(tx_date)
 
             total_received = Decimal("0")
             total_spent = Decimal("0")
@@ -151,24 +151,23 @@ class DolfiCalculator:
         balance_btc = Decimal("0")
 
         for tx in wallet.transactions:
-            tx_btc = Decimal(str(tx.balance_btc))
-            tx_usd = Decimal(str(tx.balance_usd))
-            balance_btc += tx_btc
-            if tx_btc > 0:
-                invested_usd += abs(tx_usd)
+            balance_btc += tx.balance_btc
+            if tx.balance_btc > 0:
+                invested_usd += abs(tx.balance_usd)
             else:
-                returned_usd += abs(tx_usd)
+                returned_usd += abs(tx.balance_usd)
 
-        current_price = Decimal(str(self.prices.get_bitcoin_price(datetime.now().timestamp())))
+        current_price = self.prices.get_bitcoin_price(datetime.now().timestamp())
         balance_usd = balance_btc * current_price
         roa = self.calculate_roa(invested_usd, balance_usd, returned_usd)
-        btc_price_change = self.calculate_btc_price_change(current_price, wallet.first_transaction_date)
+        btc_price_change = self.calculate_btc_price_change(current_price, wallet.first_transaction_date.timestamp())
 
         return {
             "balance_btc": balance_btc,
             "balance_usd": balance_usd,
             "btc_price_change": btc_price_change,
             "roa": roa,
+            "transaction_count": len(wallet.transactions),
         }
 
     def update_wallet(self, wallet: Wallet, db: SQLAlchemy) -> int | None:

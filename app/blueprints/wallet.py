@@ -1,4 +1,3 @@
-from celery import chain, chord
 from flask import Blueprint, current_app, jsonify
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -6,7 +5,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.external.cache import cache
 from app.external.models import Wallet, db
 from app.external.schemas import WalletSchema
-from app.external.tasks import calculate_wallet_data, insert_data_in_db, process_transaction, update_all_wallets
 from app.services.auth import require_api_key
 from app.services.calculation_service import DolfiCalculator
 
@@ -18,7 +16,7 @@ wallet_bp = Blueprint("wallet", __name__)
 @cache.cached(timeout=600)
 def get_all_wallet():
     current_app.logger.debug("Pegando todas as wallets")
-    wallets = db.session.execute(select(Wallet)).scalars().all()
+    wallets = db.session.scalars(select(Wallet)).all()
     if not wallets:
         current_app.logger.warning("Não existem wallets salvas")
         return jsonify({"error": "Carteiras não encontradas"}), 404
@@ -92,38 +90,3 @@ def add_wallet(address: str):
 
     current_app.logger.info(f"Carteira {address} e transações adicionadas com sucesso!")
     return jsonify({"message": "Carteira inserida e dados calculados."}), 201
-
-
-@wallet_bp.route("/async/<string:address>", methods=["POST"])
-@require_api_key
-def add_walleta(address: str):
-    current_app.logger.info(f"Adição da carteira {address} iniciada!")
-    calc = DolfiCalculator()
-
-    wallet = db.session.get(Wallet, address)
-    if wallet:
-        current_app.logger.warning(f"Carteira {address} já existe!")
-        return jsonify({"error": "Carteira já cadastrada."}), 400
-
-    wallet_info = calc.get_wallet_info(address)
-    if not wallet_info:
-        current_app.logger.warning(f"Falha ao obter dados da carteira {address}!")
-        return jsonify({"error": "Falha ao obter dados da carteira."}), 500
-
-    txs = calc.get_txs(address)
-    pipeline = chord((process_transaction.s(tx, address) for tx in txs), calculate_wallet_data.s(wallet_info))
-    complete_pipeline = chain(pipeline | insert_data_in_db.s())
-    response = complete_pipeline().get()
-    if response.get("sucess"):
-        current_app.logger.info(f"Carteira {address} e transações adicionadas com sucesso!")
-        return jsonify({"message": "Carteira inserida e dados calculados."}), 201
-    current_app.logger.error(f"Falha ao inserir a carteira {address}")
-    return jsonify({"message": "Erro ao inserir a carteira"}), 500
-
-
-@wallet_bp.route("/update", methods=["UPDATE"])
-@require_api_key
-def update_wallets():
-    res = update_all_wallets()
-    print(res)
-    return jsonify({"bololo": "hahah"})

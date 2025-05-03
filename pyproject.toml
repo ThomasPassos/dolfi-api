@@ -23,7 +23,8 @@ dependencies = [
     "flask-caching (>=2.3.1,<3.0.0)",
     "redis (>=5.2.1,<6.0.0)",
     "celery (>=5.5.2,<6.0.0)",
-    "flower (>=2.0.1,<3.0.0)"
+    "flower (>=2.0.1,<3.0.0)",
+    "flask-migrate (>=4.1.0,<5.0.0)"
 ]
 
 [build-system]
@@ -39,12 +40,14 @@ taskipy = "^1.14.1"
 mypy = "^1.15.0"
 pre-commit = "^4.2.0"
 bandit = "^1.8.3"
-celery-types = "^0.23.0"
+pytest = "^8.3.5"
+pytest-cov = "^6.1.1"
 
 
 [tool.poetry.group.stubs.dependencies]
 types-requests = "^2.32.0.20250328"
 types-flask = "^1.1.6"
+celery-types = "^0.23.0"
 
 [tool.ruff]
 line-length = 130
@@ -69,6 +72,13 @@ dkrun = "sudo docker run -p 5000:5000 --env-file .flaskenv dolfi"
 rm-all-imgs = "docker rmi $(docker images -q)"
 dev = "git checkout dev"
 main = "git checkout main"
+queue = "celery -A make_celery:celery_app worker --loglevel=info"
+flower = "celery -A make_celery:celery_app flower"
+post = "http POST http://127.0.0.1:5000/34piq2XmS3shJR3UTo8YuKkTrPZjrTTiZ8 X-Api-Key:BbfvrpJnSYJocYY#KrHTgUrb*4tfy*4PvB3ZNdz2huaZgz49gG"
+get = "http GET http://127.0.0.1:5000/34piq2XmS3shJR3UTo8YuKkTrPZjrTTiZ8 X-Api-Key:BbfvrpJnSYJocYY#KrHTgUrb*4tfy*4PvB3ZNdz2huaZgz49gG"
+get_all = "chttp DELETE http://127.0.0.1:5000/all X-Api-Key:BbfvrpJnSYJocYY#KrHTgUrb*4tfy*4PvB3ZNdz2huaZgz49gG"
+delete = "http DELETE http://127.0.0.1:5000/34piq2XmS3shJR3UTo8YuKkTrPZjrTTiZ8 X-Api-Key:BbfvrpJnSYJocYY#KrHTgUrb*4tfy*4PvB3ZNdz2huaZgz49gG"
+update = "http UPDATE http://127.0.0.1:5000/update X-Api-Key:BbfvrpJnSYJocYY#KrHTgUrb*4tfy*4PvB3ZNdz2huaZgz49gG"
 
 [tool.mypy]
 python_version = "3.12"

@@ -26,9 +26,10 @@ def create_app(config_object=Config):
 
         app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
         # Inicialização das extensões
-        from app.external.models import db
+        from app.external.models import db, migrate
 
         db.init_app(app)
+        migrate.init_app(app, db)
 
         from app.external.cache import cache
 

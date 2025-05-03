@@ -1,8 +1,6 @@
-from datetime import datetime
 from decimal import Decimal
-from typing import Any
 
-from celery import chain, group, shared_task
+from celery import chain, chord, group, shared_task
 from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
@@ -14,88 +12,101 @@ calc = DolfiCalculator()
 
 
 @shared_task
-def update_all_wallets():
-    wallets = db.session.execute(select(Wallet)).scalars().all()
+def update_all_wallets() -> dict[str, str]:
+    logger.debug("Iniciando atualização de todas as carteiras")
+    wallets = db.session.scalars(select(Wallet)).all()
     if wallets:
-        wallets_to_update = filter(calc.has_new_txs, wallets)
+        wallets_to_update = set(filter(calc.has_new_txs, wallets))
+        wallets_to_recalculate = set(wallets).difference(wallets_to_update)
+
+        logger.debug(f"carteiras para atualizar: {wallets_to_update}")
+        logger.debug(f"carteiras para recalcular: {wallets_to_recalculate}")
+
         addresses_to_update = [wallet.address for wallet in wallets_to_update]
-        results = group(update_wallet.s(address) for address in addresses_to_update)()
-        print(results)
-        wallets_to_recalculate = filter(lambda x: False if calc.has_new_txs(x) else True, wallets)
+        group(update_wallet.s(address) for address in addresses_to_update)()
+
         addresses_to_recalculate = [wallet.address for wallet in wallets_to_recalculate]
-        results_2 = group(recalculate_wallet.s(address) for address in addresses_to_recalculate)()
-        print(results_2)
+        group(recalculate_wallet.s(address) for address in addresses_to_recalculate)()
+        logger.info("Iniciada à atualização das carteiras")
         return {"message": "Iniciada à atualização das carteiras"}
     logger.warning("Nenhuma carteira foi retornada da base de dados")
     return {"message": "Nenhuma carteira para atualizar"}
 
 
 @shared_task
-def update_wallet(address: str):
+def update_wallet(address: str) -> dict[str, str]:
+    logger.info(f"Iniciando atualização da carteira {address}")
     try:
-        chain(get_new_txs.s(address), process_transaction.map(), load_new_txs.s(), recalculate_wallet.si(address))()
+        chain(get_new_txs.s(address), start_processing.s(address=address), recalculate_wallet.si(address))()
+        logger.info(f"Atualização da carteira {address} iniciada")
         return {"message": f"Atualização da carteira {address} iniciada"}
     except Exception as e:
         logger.error(f"Falha ao atualizar carteira {address}: {e}")
         raise Exception
-        # return {"message": f"falha ao iniciar atualização da carteira {address}"}
+
+
+@shared_task
+def start_processing(new_txs: list, address: str):
+    try:
+        logger.debug("Iniciando processamento das transações")
+        chord(process_transaction.s(tx, address) for tx in new_txs)(load_new_txs.s(address))
+        return {"message": "Iniciado o processamento das txs"}
+    except Exception as e:
+        logger.error(f"Erro ao processar e inserir as transações: {e}")
+        return None
 
 
 @shared_task
 def recalculate_wallet(address: str):
+    logger.debug(f"recalculando wallet {address}")
     wallet = db.session.get(Wallet, address)
-    wallet_data = calc.calculate_from_transactions(wallet)
-    wallet = calc.wallet_schema.load(wallet_data, instance=wallet, partial=True, session=db.session)
-    try:
-        db.session.commit()
-        logger.debug(f"Dados calculados da wallet {wallet.address}: {wallet}")
-        return {"sucess": True}
-    except SQLAlchemyError:
-        db.session.rollback()
-        logger.debug(f"Falha ao calcular dados da wallet {wallet.address}: {wallet}")
-        return {"sucess": False}
+    if wallet:
+        wallet_data = calc.calculate_from_transactions(wallet)
+        wallet = calc.wallet_schema.load(wallet_data, instance=wallet, partial=True, session=db.session)
+        logger.debug(f"recalculando wallet data {wallet_data}")
+        try:
+            db.session.commit()
+            logger.debug(f"Dados calculados da wallet {wallet.address}")
+            return {"sucess": True}
+        except SQLAlchemyError:
+            db.session.rollback()
+            logger.debug(f"Falha ao calcular dados da wallet {wallet.address}")
+            return {"sucess": False}
+    raise Exception
 
 
 @shared_task
 def get_new_txs(address: str):
+    logger.debug(f"pegando novas transações da wallet {address}")
     try:
         wallet = db.session.get(Wallet, address)
-        txs = calc.blockchain.get_all_transactions(wallet.address)
-        stored_txids = {tx.transaction_id for tx in wallet.transactions}
-        txs_ids = {tx.get("txid") for tx in txs}
-        new_txs_ids = txs_ids.difference(stored_txids)
-        new_txs = [tx for tx in txs if tx.get("txid") in new_txs_ids]
-        return new_txs
+        if wallet:
+            txs = calc.blockchain.get_all_transactions(wallet.address)
+            stored_txids = {tx.transaction_id for tx in wallet.transactions}
+            txs_ids = {tx.get("txid") for tx in txs}
+            new_txs_ids = txs_ids.difference(stored_txids)
+            new_txs = [tx for tx in txs if tx.get("txid") in new_txs_ids]
+            logger.debug(f"Pegas as novas txs da wallet {address}: {len(new_txs)}")
+            return new_txs
+        raise Exception
     except Exception:
         logger.error(f"Falha ao pegar as novas transações da wallet {address}")
         return {"message": "Falha ao pegar as novas transações"}
 
 
 @shared_task
-def load_new_txs(new_txs: list):
+def load_new_txs(new_txs: list, address: str):
+    logger.debug(f"Carregando na base de dados as novas transações: {len(new_txs)}")
+    wallet = db.session.get(Wallet, address)
+    wallet.transaction_count += len(new_txs)
     transactions = calc.tx_schema.load(new_txs, session=db.session, many=True)
     try:
         db.session.add_all(transactions)
         db.session.commit()
+        logger.debug(f"Carregadas na base de dados as novas transações: {len(new_txs)}")
     except Exception:
         db.session.rollback()
-
-
-@shared_task
-def insert_data_in_db(*args) -> dict[str, Any]:
-    logger.info(f"{args}")
-    wallet_data = args[0][0]
-    txs = args[0][1]
-    wallet = calc.wallet_schema.load(wallet_data, session=db.session)
-    transactions = calc.tx_schema.load(txs, session=db.session, many=True)
-    try:
-        db.session.add(wallet)
-        db.session.add_all(transactions)
-        db.session.commit()
-        return {"sucess": True}
-    except SQLAlchemyError as e:
-        db.session.rollback()
-        return {"sucess": False, "error": e}
+        logger.debug(f"Falha ao carregar as novas transações na base de dados: {len(new_txs)}")
 
 
 @shared_task
@@ -128,36 +139,3 @@ def process_transaction(tx, address) -> dict:
         "is_incoming": is_incoming,
         "transaction_id": tx.get("txid"),
     }
-
-
-@shared_task
-def calculate_wallet_data(txs: list, wallet_info: dict):
-    invested_usd = Decimal("0")
-    returned_usd = Decimal("0")
-    for tx in txs:
-        balance_btc = tx["balance_btc"]
-        balance_usd = tx["balance_usd"]
-        if balance_btc > 0:
-            invested_usd += abs(balance_usd)
-        else:
-            returned_usd += abs(balance_usd)
-    sorted_txs = sorted(txs, key=lambda x: x["transaction_date"])
-    first_tx_date = sorted_txs[-1]["transaction_date"]
-    tx_count = wallet_info.get("chain_stats", {}).get("tx_count", len(txs))
-
-    funded = Decimal(str(wallet_info.get("chain_stats", {}).get("funded_txo_sum", 0))) / Decimal("1e8")
-    spent = Decimal(str(wallet_info.get("chain_stats", {}).get("spent_txo_sum", 0))) / Decimal("1e8")
-    balance_btc = funded - spent
-    current_price = Decimal(str(calc.prices.get_bitcoin_price(datetime.now().timestamp())))
-    balance_usd = balance_btc * current_price
-    roa = calc.calculate_roa(invested_usd, balance_usd, returned_usd)
-    btc_price_change = calc.calculate_btc_price_change(current_price, first_tx_date)
-    return {
-        "address": wallet_info.get("address"),
-        "balance_btc": balance_btc,
-        "balance_usd": balance_usd,
-        "transaction_count": tx_count,
-        "btc_price_change": btc_price_change,
-        "roa": roa,
-        "first_transaction_date": first_tx_date,
-    }, txs
