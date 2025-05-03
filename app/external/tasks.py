@@ -49,7 +49,7 @@ def update_wallet(address: str) -> dict[str, str]:
 def start_processing(new_txs: list, address: str):
     try:
         logger.debug("Iniciando processamento das transações")
-        chord(process_transaction.s(tx, address) for tx in new_txs)(load_new_txs.s())
+        chord(process_transaction.s(tx, address) for tx in new_txs)(load_new_txs.s(address))
         return {"message": "Iniciado o processamento das txs"}
     except Exception as e:
         logger.error(f"Erro ao processar e inserir as transações: {e}")
@@ -95,8 +95,10 @@ def get_new_txs(address: str):
 
 
 @shared_task
-def load_new_txs(new_txs: list):
+def load_new_txs(new_txs: list, address: str):
     logger.debug(f"Carregando na base de dados as novas transações: {len(new_txs)}")
+    wallet = db.session.get(Wallet, address)
+    wallet.transaction_count += len(new_txs)
     transactions = calc.tx_schema.load(new_txs, session=db.session, many=True)
     try:
         db.session.add_all(transactions)
