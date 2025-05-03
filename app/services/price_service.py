@@ -1,3 +1,4 @@
+import os
 from decimal import Decimal
 from functools import lru_cache
 from typing import Union
@@ -5,8 +6,8 @@ from typing import Union
 import requests
 from loguru import logger
 
-CRYPTOCOMPARE_API_KEY = "c70867ec2a1d3efddd6645c0ca05601efff07731850e7266761d0ee89e0d8527"
-CRYPTOCOMPARE_API_URL = "https://min-api.cryptocompare.com/data/pricehistorical"
+CRYPTOCOMPARE_API_KEY = os.getenv("CRYPTOCOMPARE_API_KEY")
+CRYPTOCOMPARE_API_URL = os.getenv("CRYPTOCOMPARE_API_URL")
 
 
 class PriceService:
