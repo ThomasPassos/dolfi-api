@@ -38,7 +38,6 @@ taskipy = "^1.14.1"
 mypy = "^1.15.0"
 pre-commit = "^4.2.0"
 bandit = "^1.8.3"
-celery-types = "^0.23.0"
 pytest = "^8.3.5"
 pytest-cov = "^6.1.1"
 
@@ -46,6 +45,7 @@ pytest-cov = "^6.1.1"
 [tool.poetry.group.stubs.dependencies]
 types-requests = "^2.32.0.20250328"
 types-flask = "^1.1.6"
+celery-types = "^0.23.0"
 
 [tool.ruff]
 line-length = 130
