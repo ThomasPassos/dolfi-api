@@ -5,7 +5,6 @@ from sqlalchemy.exc import SQLAlchemyError
 from app.external.cache import cache
 from app.external.models import Wallet, db
 from app.external.schemas import WalletSchema
-from app.external.tasks import update_all_wallets
 from app.services.auth import require_api_key
 from app.services.calculation_service import DolfiCalculator
 
