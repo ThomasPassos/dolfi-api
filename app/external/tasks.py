@@ -61,7 +61,7 @@ def recalculate_wallet(address: str):
     logger.debug(f"recalculando wallet {address}")
     wallet = db.session.get(Wallet, address)
     if wallet:
-        wallet_data = calc.calculate_from_transactions(wallet)
+        wallet_data = calc.recalculate_wallete_data(wallet)
         wallet = calc.wallet_schema.load(wallet_data, instance=wallet, partial=True, session=db.session)
         logger.debug(f"recalculando wallet data {wallet_data}")
         try:

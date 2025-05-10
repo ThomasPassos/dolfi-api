@@ -28,4 +28,4 @@ class PriceService:
             return Decimal(price)
         except requests.RequestException as e:
             logger.error(f"Erro ao adquirir cotação do bitcoin para timestamp {date}: {e}")
-            return Decimal("0")
+            raise e
