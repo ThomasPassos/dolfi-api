@@ -1,8 +1,7 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Collection, Union
+from typing import Any, Union
 
-from flask_sqlalchemy import SQLAlchemy
 from loguru import logger
 
 from app.external.models import Wallet
@@ -63,7 +62,7 @@ class DolfiCalculator:
 
     @staticmethod
     def calculate_tx_total_spent(tx: dict[str, Any], address: str) -> Decimal:
-        '''Calculate the total amount spent in a transaction'''
+        """Calculate the total amount spent in a transaction"""
         total_spent = Decimal("0")
         satoshi_to_btc = Decimal("1e8")
         for vin in tx.get("vin", []):
@@ -74,7 +73,7 @@ class DolfiCalculator:
 
     @staticmethod
     def calculate_tx_total_received(tx: dict[str, Any], address: str) -> Decimal:
-        '''Calculate the total amount received in a transaction'''
+        """Calculate the total amount received in a transaction"""
         total_received = Decimal("0")
         satoshi_to_btc = Decimal("1e8")
         for vout in tx.get("vout", []):
@@ -108,7 +107,7 @@ class DolfiCalculator:
             return None
 
     def process_all_transactions(self, txs: list[dict[str, Any]], address: str) -> tuple[Decimal, Decimal, list[dict[str, Any]]]:
-        ''''Process all transactions and return invested and returned USD amounts, along with processed transactions'''
+        """'Process all transactions and return invested and returned USD amounts, along with processed transactions"""
         processed_txs = []
         invested_usd = Decimal("0")
         returned_usd = Decimal("0")
@@ -129,7 +128,7 @@ class DolfiCalculator:
 
     @staticmethod
     def get_balances(wallet_info: dict[str, Any], current_price: Decimal) -> tuple[Decimal, Decimal]:
-        '''Get wallet balances and current price of Bitcoin'''
+        """Get wallet balances and current price of Bitcoin"""
         satoshi_to_btc = Decimal("1e8")
         funded = Decimal(str(wallet_info.get("chain_stats", {}).get("funded_txo_sum", 0))) / satoshi_to_btc
         spent = Decimal(str(wallet_info.get("chain_stats", {}).get("spent_txo_sum", 0))) / satoshi_to_btc
@@ -139,7 +138,7 @@ class DolfiCalculator:
         return balance_btc, balance_usd
 
     def calculate_wallet_data(self, address: str) -> tuple[dict[str, Any], list[dict[str, Any]]] | tuple[None, None]:
-        '''Calculate wallet data and return it along with processed transactions'''
+        """Calculate wallet data and return it along with processed transactions"""
         logger.info(f"Iniciado processo de extração de dados da wallet {address}")
         wallet_info = self.get_wallet_info(address)
         txs = self.get_txs(address)
@@ -170,7 +169,7 @@ class DolfiCalculator:
         return wallet_data, processed_txs
 
     def recalculate_wallete_data(self, wallet: Wallet) -> dict[str, Any]:
-        '''Recalculate wallet data based on the latest transactions and prices'''
+        """Recalculate wallet data based on the latest transactions and prices"""
         invested_usd = Decimal("0")
         returned_usd = Decimal("0")
         balance_btc = Decimal("0")
