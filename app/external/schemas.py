@@ -38,7 +38,9 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
         load_instance = True
 
     first_transaction_date = fields.DateTime(format="timestamp")
-    transactions = Nested(TransactionSchema, many=True, exclude=("wallet_address",))
+    transactions = Nested(
+        TransactionSchema, many=True, exclude=("wallet_address",)
+    )
 
     @staticmethod
     def change_decimal_dump(data):
@@ -53,5 +55,7 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
     def format_json(self, data, many, **kwargs):
         data = self.change_decimal_dump(data)
         if data.get("first_transaction_date"):
-            data["first_transaction_date"] = int(data["first_transaction_date"])
+            data["first_transaction_date"] = int(
+                data["first_transaction_date"]
+            )
         return data

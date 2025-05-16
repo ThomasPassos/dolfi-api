@@ -51,7 +51,7 @@ types-flask = "^1.1.6"
 celery-types = "^0.23.0"
 
 [tool.ruff]
-line-length = 130
+line-length = 79
 extend-exclude = ['static']
 
 [tool.ruff.lint]

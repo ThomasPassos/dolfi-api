@@ -35,7 +35,9 @@ class DolfiCalculator:
         """Check if the wallet has new transactions"""
         try:
             wallet_info = self.get_wallet_info(wallet.address)
-            current_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", None)
+            current_tx_count = wallet_info.get("chain_stats", {}).get(
+                "tx_count", None
+            )
             has_new = current_tx_count > wallet.transaction_count
             if has_new:
                 return True
@@ -43,7 +45,9 @@ class DolfiCalculator:
         except Exception:
             return False
 
-    def calculate_btc_price_change(self, btc_today: Decimal, first_tx_dt: Union[int, float]) -> Decimal:
+    def calculate_btc_price_change(
+        self, btc_today: Decimal, first_tx_dt: Union[int, float]
+    ) -> Decimal:
         """Calculate the percentage change in Bitcoin price"""
         btc_before = self.prices.get_bitcoin_price(first_tx_dt)
         if btc_before == 0:
@@ -52,10 +56,16 @@ class DolfiCalculator:
         return ((btc_today / btc_before) - 1) * 100
 
     @staticmethod
-    def calculate_roa(invested_usd: Decimal, balance_usd: Decimal, returned_usd: Decimal) -> Decimal:
+    def calculate_roa(
+        invested_usd: Decimal, balance_usd: Decimal, returned_usd: Decimal
+    ) -> Decimal:
         """'Calculate the Return on Assets (ROA)"""
         if invested_usd > 0:
-            roa = (balance_usd + returned_usd - invested_usd) / invested_usd * 100
+            roa = (
+                (balance_usd + returned_usd - invested_usd)
+                / invested_usd
+                * 100
+            )
             return roa
         logger.warning(f"ROA zerado: invested_usd = {invested_usd}")
         return Decimal("0")
@@ -68,20 +78,28 @@ class DolfiCalculator:
         for vin in tx.get("vin", []):
             prev = vin.get("prevout", {})
             if prev.get("scriptpubkey_address") == address:
-                total_spent += Decimal(str(prev.get("value", 0))) / satoshi_to_btc
+                total_spent += (
+                    Decimal(str(prev.get("value", 0))) / satoshi_to_btc
+                )
         return total_spent
 
     @staticmethod
-    def calculate_tx_total_received(tx: dict[str, Any], address: str) -> Decimal:
+    def calculate_tx_total_received(
+        tx: dict[str, Any], address: str
+    ) -> Decimal:
         """Calculate the total amount received in a transaction"""
         total_received = Decimal("0")
         satoshi_to_btc = Decimal("1e8")
         for vout in tx.get("vout", []):
             if vout.get("scriptpubkey_address") == address:
-                total_received += Decimal(str(vout.get("value", 0))) / satoshi_to_btc
+                total_received += (
+                    Decimal(str(vout.get("value", 0))) / satoshi_to_btc
+                )
         return total_received
 
-    def process_transaction(self, tx: dict[str, Any], address: str) -> dict[str, Any] | None:
+    def process_transaction(
+        self, tx: dict[str, Any], address: str
+    ) -> dict[str, Any] | None:
         """Process a transaction and return relevant data (incoming/outgoing, balance, etc)"""
         try:
             tx_date = int(tx["status"]["block_time"])
@@ -103,10 +121,14 @@ class DolfiCalculator:
                 "transaction_id": tx.get("txid"),
             }
         except Exception as e:
-            logger.error(f"Erro no processamento da transação {tx.get('txid')} da carteira {address}: {e}")
+            logger.error(
+                f"Erro no processamento da transação {tx.get('txid')} da carteira {address}: {e}"
+            )
             return None
 
-    def process_all_transactions(self, txs: list[dict[str, Any]], address: str) -> tuple[Decimal, Decimal, list[dict[str, Any]]]:
+    def process_all_transactions(
+        self, txs: list[dict[str, Any]], address: str
+    ) -> tuple[Decimal, Decimal, list[dict[str, Any]]]:
         """'Process all transactions and return invested and returned USD amounts, along with processed transactions"""
         processed_txs = []
         invested_usd = Decimal("0")
@@ -127,19 +149,38 @@ class DolfiCalculator:
         return invested_usd, returned_usd, processed_txs
 
     @staticmethod
-    def get_balances(wallet_info: dict[str, Any], current_price: Decimal) -> tuple[Decimal, Decimal]:
+    def get_balances(
+        wallet_info: dict[str, Any], current_price: Decimal
+    ) -> tuple[Decimal, Decimal]:
         """Get wallet balances and current price of Bitcoin"""
         satoshi_to_btc = Decimal("1e8")
-        funded = Decimal(str(wallet_info.get("chain_stats", {}).get("funded_txo_sum", 0))) / satoshi_to_btc
-        spent = Decimal(str(wallet_info.get("chain_stats", {}).get("spent_txo_sum", 0))) / satoshi_to_btc
+        funded = (
+            Decimal(
+                str(
+                    wallet_info.get("chain_stats", {}).get("funded_txo_sum", 0)
+                )
+            )
+            / satoshi_to_btc
+        )
+        spent = (
+            Decimal(
+                str(wallet_info.get("chain_stats", {}).get("spent_txo_sum", 0))
+            )
+            / satoshi_to_btc
+        )
 
         balance_btc = funded - spent
         balance_usd = balance_btc * current_price
         return balance_btc, balance_usd
 
-    def calculate_wallet_data(self, address: str) -> tuple[dict[str, Any], list[dict[str, Any]]] | tuple[None, None]:
-        """Calculate wallet data and return it along with processed transactions"""
-        logger.info(f"Iniciado processo de extração de dados da wallet {address}")
+    def calculate_wallet_data(
+        self, address: str
+    ) -> tuple[dict[str, Any], list[dict[str, Any]]] | tuple[None, None]:
+        """Calcula dados da carteira e retorna junto
+        com as transações processadas"""
+        logger.info(
+            f"Iniciado processo de extração de dados da wallet {address}"
+        )
         wallet_info = self.get_wallet_info(address)
         txs = self.get_txs(address)
         if not wallet_info or not txs:
@@ -147,14 +188,26 @@ class DolfiCalculator:
 
         logger.debug(f"Iniciando processamento dos dados da wallet {address}")
         first_tx_date = int(txs[-1]["status"]["block_time"])
-        invested_usd, returned_usd, processed_txs = self.process_all_transactions(txs, address)
-        logger.debug(f"Txs da wallet {address} processadas: {invested_usd, returned_usd}")
+        invested_usd, returned_usd, processed_txs = (
+            self.process_all_transactions(txs, address)
+        )
+        logger.debug(
+            f"Txs da wallet {address} processadas: {invested_usd, returned_usd}"
+        )
 
-        wallet_tx_count = wallet_info.get("chain_stats", {}).get("tx_count", len(processed_txs))
-        current_price = self.prices.get_bitcoin_price(datetime.now().timestamp())
-        balance_btc, balance_usd = self.get_balances(wallet_info, current_price)
+        wallet_tx_count = wallet_info.get("chain_stats", {}).get(
+            "tx_count", len(processed_txs)
+        )
+        current_price = self.prices.get_bitcoin_price(
+            datetime.now().timestamp()
+        )
+        balance_btc, balance_usd = self.get_balances(
+            wallet_info, current_price
+        )
         roa = self.calculate_roa(invested_usd, balance_usd, returned_usd)
-        btc_price_change = self.calculate_btc_price_change(current_price, first_tx_date)
+        btc_price_change = self.calculate_btc_price_change(
+            current_price, first_tx_date
+        )
 
         wallet_data = {
             "address": address,
@@ -168,8 +221,9 @@ class DolfiCalculator:
         logger.debug(f"Dados da wallet {address} processados: {wallet_data}")
         return wallet_data, processed_txs
 
-    def recalculate_wallete_data(self, wallet: Wallet) -> dict[str, Any]:
-        """Recalculate wallet data based on the latest transactions and prices"""
+    def recalculate_wallet_data(self, wallet: Wallet) -> dict[str, Any]:
+        """Recalcula os dados da carteira com base nas
+        transações e preços mais recentes"""
         invested_usd = Decimal("0")
         returned_usd = Decimal("0")
         balance_btc = Decimal("0")
@@ -181,10 +235,14 @@ class DolfiCalculator:
             else:
                 returned_usd += abs(tx.balance_usd)
 
-        current_price = self.prices.get_bitcoin_price(datetime.now().timestamp())
+        current_price = self.prices.get_bitcoin_price(
+            datetime.now().timestamp()
+        )
         balance_usd = balance_btc * current_price
         roa = self.calculate_roa(invested_usd, balance_usd, returned_usd)
-        btc_price_change = self.calculate_btc_price_change(current_price, wallet.first_transaction_date.timestamp())
+        btc_price_change = self.calculate_btc_price_change(
+            current_price, wallet.first_transaction_date.timestamp()
+        )
 
         return {
             "balance_btc": balance_btc,

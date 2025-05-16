@@ -3,7 +3,6 @@ import traceback
 
 from dotenv import load_dotenv
 from flask import Flask
-from flask_smorest import Api
 from flask_talisman import Talisman
 from loguru import logger
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -25,7 +24,9 @@ def create_app(config_object=Config):
         if not app.debug:
             app.logger.setLevel(logging.INFO)
 
-        app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1)
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1
+        )
         # Inicialização das extensões
         from app.external.models import db, migrate
 
@@ -51,8 +52,9 @@ def create_app(config_object=Config):
         bp.init_app(app)
 
         Talisman(app, force_https=False, content_security_policy=None)
-        Api(app)
         return app
     except Exception as e:
-        logger.critical(f"Factory não retornando a aplicação: {e}\n{traceback.format_exc()}")
+        logger.critical(
+            f"Factory não retornando a aplicação: {e}\n{traceback.format_exc()}"
+        )
         return None

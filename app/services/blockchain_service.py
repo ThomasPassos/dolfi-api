@@ -37,11 +37,15 @@ class BlockchainService:
                 r.raise_for_status()
                 batch = r.json()
             except requests.RequestException as e:
-                logger.error(f"Erro ao obter transações para a carteira {address}: {e}")
+                logger.error(
+                    f"Erro ao obter transações para a carteira {address}: {e}"
+                )
                 break
 
             if not batch:
-                logger.debug(f"Fim da busca das transações para a carteira: {address}")
+                logger.debug(
+                    f"Fim da busca das transações para a carteira: {address}"
+                )
                 break
 
             txs.extend(batch)

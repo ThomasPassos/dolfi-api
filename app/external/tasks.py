@@ -25,8 +25,13 @@ def update_all_wallets() -> dict[str, str]:
         addresses_to_update = [wallet.address for wallet in wallets_to_update]
         group(update_wallet.s(address) for address in addresses_to_update)()
 
-        addresses_to_recalculate = [wallet.address for wallet in wallets_to_recalculate]
-        group(recalculate_wallet.s(address) for address in addresses_to_recalculate)()
+        addresses_to_recalculate = [
+            wallet.address for wallet in wallets_to_recalculate
+        ]
+        group(
+            recalculate_wallet.s(address)
+            for address in addresses_to_recalculate
+        )()
         logger.info("Iniciada à atualização das carteiras")
         return {"message": "Iniciada à atualização das carteiras"}
     logger.warning("Nenhuma carteira foi retornada da base de dados")
@@ -37,7 +42,11 @@ def update_all_wallets() -> dict[str, str]:
 def update_wallet(address: str) -> dict[str, str]:
     logger.info(f"Iniciando atualização da carteira {address}")
     try:
-        chain(get_new_txs.s(address), start_processing.s(address=address), recalculate_wallet.si(address))()
+        chain(
+            get_new_txs.s(address),
+            start_processing.s(address=address),
+            recalculate_wallet.si(address),
+        )()
         logger.info(f"Atualização da carteira {address} iniciada")
         return {"message": f"Atualização da carteira {address} iniciada"}
     except Exception as e:
@@ -49,7 +58,9 @@ def update_wallet(address: str) -> dict[str, str]:
 def start_processing(new_txs: list, address: str):
     try:
         logger.debug("Iniciando processamento das transações")
-        chord(process_transaction.s(tx, address) for tx in new_txs)(load_new_txs.s(address))
+        chord(process_transaction.s(tx, address) for tx in new_txs)(
+            load_new_txs.s(address)
+        )
         return {"message": "Iniciado o processamento das txs"}
     except Exception as e:
         logger.error(f"Erro ao processar e inserir as transações: {e}")
@@ -61,8 +72,13 @@ def recalculate_wallet(address: str):
     logger.debug(f"recalculando wallet {address}")
     wallet = db.session.get(Wallet, address)
     if wallet:
-        wallet_data = calc.recalculate_wallete_data(wallet)
-        wallet = calc.wallet_schema.load(wallet_data, instance=wallet, partial=True, session=db.session)
+        wallet_data = calc.recalculate_wallet_data(wallet)
+        wallet = calc.wallet_schema.load(
+            wallet_data,
+            instance=wallet,
+            partial=True,
+            session=db.session,  # type: ignore
+        )
         logger.debug(f"recalculando wallet data {wallet_data}")
         try:
             db.session.commit()
@@ -86,7 +102,9 @@ def get_new_txs(address: str):
             txs_ids = {tx.get("txid") for tx in txs}
             new_txs_ids = txs_ids.difference(stored_txids)
             new_txs = [tx for tx in txs if tx.get("txid") in new_txs_ids]
-            logger.debug(f"Pegas as novas txs da wallet {address}: {len(new_txs)}")
+            logger.debug(
+                f"Pegas as novas txs da wallet {address}: {len(new_txs)}"
+            )
             return new_txs
         raise Exception
     except Exception:
@@ -96,17 +114,28 @@ def get_new_txs(address: str):
 
 @shared_task
 def load_new_txs(new_txs: list, address: str):
-    logger.debug(f"Carregando na base de dados as novas transações: {len(new_txs)}")
+    logger.debug(
+        f"Carregando na base de dados as novas transações: {len(new_txs)}"
+    )
     wallet = db.session.get(Wallet, address)
-    wallet.transaction_count += len(new_txs)
-    transactions = calc.tx_schema.load(new_txs, session=db.session, many=True)
-    try:
-        db.session.add_all(transactions)
-        db.session.commit()
-        logger.debug(f"Carregadas na base de dados as novas transações: {len(new_txs)}")
-    except Exception:
-        db.session.rollback()
-        logger.debug(f"Falha ao carregar as novas transações na base de dados: {len(new_txs)}")
+    if wallet:
+        wallet.transaction_count += len(new_txs)
+        transactions = calc.tx_schema.load(
+            new_txs,
+            session=db.session,  # type: ignore
+            many=True,
+        )
+        try:
+            db.session.add_all(transactions)
+            db.session.commit()
+            logger.debug(
+                f"Carregadas na db as novas transações: {len(new_txs)}"
+            )
+        except Exception:
+            db.session.rollback()
+            logger.debug(
+                f"Falha ao carregar as novas transações na db: {len(new_txs)}"
+            )
 
 
 @shared_task
@@ -125,7 +154,9 @@ def process_transaction(tx, address) -> dict:
 
     for vout in tx.get("vout", []):
         if vout.get("scriptpubkey_address") == address:
-            total_received += Decimal(str(vout.get("value", 0))) / satoshi_to_btc
+            total_received += (
+                Decimal(str(vout.get("value", 0))) / satoshi_to_btc
+            )
 
     net_btc = total_received - total_spent
     net_usd = net_btc * btc_price
