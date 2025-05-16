@@ -74,10 +74,10 @@ def add_wallet(address: str):
         current_app.logger.warning(f"Falha ao obter dados da carteira {address}!")
         return jsonify({"error": "Falha ao obter dados da carteira."}), 500
 
-    wallet = calc_service.wallet_schema.load(wallet_data, session=db.session)
+    wallet = calc_service.wallet_schema.load(wallet_data, session=db.session)  # type: ignore
     transactions = []
     if tx_list:
-        transactions = [calc_service.tx_schema.load(tx, session=db.session) for tx in tx_list]
+        transactions = [calc_service.tx_schema.load(tx, session=db.session) for tx in tx_list]  # type: ignore
 
     try:
         db.session.add(wallet)

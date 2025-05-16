@@ -2,6 +2,10 @@ import os
 
 
 class Config:
+    # OpenAPI Config
+    API_TITLE = "Dolfi API"
+    API_VERSION = "0.0.1"
+    OPENAPI_VERSION = "3.0.2"
     # SQLAlchemy Config
     SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URI")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
