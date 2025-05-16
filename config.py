@@ -15,9 +15,6 @@ class Config:
         "max_overflow": 30,
         "pool_recycle": 3600,
     }
-    # Apscheduler Config
-    SCHEDULER_API_ENABLED = True
-    APSCHEDULER_JOB_DEFAULTS = {"coalesce": True, "max_instances": 1}
     # Cache Config
     CACHE_TYPE = "RedisCache"
     CACHE_DEFAULT_TIMEOUT = 600
