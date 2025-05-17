@@ -34,7 +34,6 @@ class AllWallets(MethodView):
         description="Retorna todas as wallets",
         headers=header,
     )
-    @bp.alt_response(401, description="Erro de autenticação")
     @require_api_key
     @cache.memoize(timeout=600)
     def get(self):  # noqa: PLR6301

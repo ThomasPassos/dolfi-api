@@ -33,17 +33,16 @@ class DolfiCalculator:
 
     def has_new_txs(self, wallet: Wallet) -> bool:
         """Check if the wallet has new transactions"""
-        try:
-            wallet_info = self.get_wallet_info(wallet.address)
-            current_tx_count = wallet_info.get("chain_stats", {}).get(
-                "tx_count", None
-            )
-            has_new = current_tx_count > wallet.transaction_count
-            if has_new:
-                return True
+        wallet_info = self.get_wallet_info(wallet.address)
+        if not wallet_info:
             return False
-        except Exception:
-            return False
+        current_tx_count = wallet_info.get("chain_stats", {}).get(
+            "tx_count", None
+        )
+        has_new = current_tx_count > wallet.transaction_count
+        if has_new:
+            return True
+        return False
 
     def calculate_btc_price_change(
         self, btc_today: Decimal, first_tx_dt: Union[int, float]
@@ -100,7 +99,8 @@ class DolfiCalculator:
     def process_transaction(
         self, tx: dict[str, Any], address: str
     ) -> dict[str, Any] | None:
-        """Process a transaction and return relevant data (incoming/outgoing, balance, etc)"""
+        """Process a transaction and return relevant data
+        (incoming/outgoing, balance, etc)"""
         try:
             tx_date = int(tx["status"]["block_time"])
             btc_price = self.prices.get_bitcoin_price(tx_date)
@@ -122,14 +122,16 @@ class DolfiCalculator:
             }
         except Exception as e:
             logger.error(
-                f"Erro no processamento da transação {tx.get('txid')} da carteira {address}: {e}"
+                f"""Erro no processamento da transação {tx.get("txid")}
+                da carteira {address}: {e}"""
             )
             return None
 
     def process_all_transactions(
         self, txs: list[dict[str, Any]], address: str
     ) -> tuple[Decimal, Decimal, list[dict[str, Any]]]:
-        """'Process all transactions and return invested and returned USD amounts, along with processed transactions"""
+        """Process all transactions and return invested and returned USD
+        amounts, along with processed transactions"""
         processed_txs = []
         invested_usd = Decimal("0")
         returned_usd = Decimal("0")
@@ -192,7 +194,7 @@ class DolfiCalculator:
             self.process_all_transactions(txs, address)
         )
         logger.debug(
-            f"Txs da wallet {address} processadas: {invested_usd, returned_usd}"
+            f"Txs da wallet {address} processadas:{invested_usd, returned_usd}"
         )
 
         wallet_tx_count = wallet_info.get("chain_stats", {}).get(

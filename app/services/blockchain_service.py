@@ -23,7 +23,8 @@ class BlockchainService:
 
     @staticmethod
     def get_all_transactions(address: str) -> list[dict[str, Any]]:
-        """Obtém todas as transações confirmadas para o endereço especificado."""
+        """Obtém todas as transações confirmadas para o
+        endereço especificado."""
         logger.debug(f"Busca de todas as transações da carteira {address}")
         txs = []
         last_txid = None

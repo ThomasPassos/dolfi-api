@@ -55,6 +55,6 @@ def create_app(config_object=Config):
         return app
     except Exception as e:
         logger.critical(
-            f"Factory não retornando a aplicação: {e}\n{traceback.format_exc()}"
+            f"Factory não retornando a aplicação:{e}\n{traceback.format_exc()}"
         )
         return None
