@@ -49,6 +49,8 @@ pytest-cov = "^6.1.1"
 types-requests = "^2.32.0.20250328"
 types-flask = "^1.1.6"
 celery-types = "^0.23.0"
+types-flask-migrate = "^4.1.0.20250112"
+types-smorest = "^1.1.2"
 
 [tool.ruff]
 line-length = 79
@@ -83,7 +85,6 @@ update = "http UPDATE http://127.0.0.1:5000/update X-Api-Key:BbfvrpJnSYJocYY#KrH
 
 [tool.mypy]
 python_version = "3.12"
-ignore_missing_imports = true
 disable_error_code = "name-defined"
 explicit_package_bases = true
 exclude = ["migrations"]
