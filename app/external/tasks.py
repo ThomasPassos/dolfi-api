@@ -73,7 +73,7 @@ def recalculate_wallet(address: str):
     wallet = db.session.get(Wallet, address)
     if wallet:
         wallet_data = calc.recalculate_wallet_data(wallet)
-        wallet = calc.wallet_schema.load(
+        calc.wallet_schema.load(
             wallet_data,
             instance=wallet,
             partial=True,
