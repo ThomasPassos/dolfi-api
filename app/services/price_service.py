@@ -1,7 +1,6 @@
 import os
 from decimal import Decimal
 from functools import lru_cache
-from typing import Union
 
 import requests
 from loguru import logger
@@ -13,7 +12,7 @@ CRYPTOCOMPARE_API_URL = os.getenv("CRYPTOCOMPARE_API_URL", "")
 class PriceService:
     @staticmethod
     @lru_cache(maxsize=1024)
-    def get_bitcoin_price(date: Union[int, float]) -> Decimal:
+    def get_bitcoin_price(date: float) -> Decimal:
         """Obtém o preço histórico do Bitcoin em USD para o
         timestamp especificado."""
         params = {

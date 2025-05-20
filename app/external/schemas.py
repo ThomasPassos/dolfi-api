@@ -1,3 +1,5 @@
+from typing import Any
+
 from flask_marshmallow import Marshmallow
 from marshmallow import fields, post_dump
 from marshmallow_sqlalchemy.fields import Nested
@@ -16,7 +18,7 @@ class TransactionSchema(ma.SQLAlchemyAutoSchema):
     transaction_date = fields.DateTime(format="timestamp")
 
     @staticmethod
-    def change_decimal_dump(data):
+    def change_decimal_dump(data: dict[str, Any]) -> dict[str, Any]:
         if data.get("balance_btc"):
             data["balance_btc"] = float(data["balance_btc"])
         if data.get("balance_usd"):
@@ -24,9 +26,13 @@ class TransactionSchema(ma.SQLAlchemyAutoSchema):
         return data
 
     @post_dump
-    def format_json(self, data, many, **kwargs):
+    def format_json(
+        self,
+        data: dict[str, Any],
+        *args: tuple,  # noqa: ARG002
+        **kwargs: dict[str, Any],  # noqa: ARG002
+    ) -> dict[str, Any]:
         data = self.change_decimal_dump(data)
-        print(data)
         data["transaction_date"] = int(data["transaction_date"])
         return data
 
@@ -43,7 +49,7 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
     )
 
     @staticmethod
-    def change_decimal_dump(data):
+    def change_decimal_dump(data: dict[str, Any]) -> dict[str, Any]:
         data["balance_btc"] = float(data["balance_btc"])
         data["balance_usd"] = float(data["balance_usd"])
         data["roa"] = float(data["roa"])
@@ -52,7 +58,12 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
         return data
 
     @post_dump
-    def format_json(self, data, many, **kwargs):
+    def format_json(
+        self,
+        data: dict[str, Any],
+        *args: tuple,  # noqa: ARG002
+        **kwargs: dict[str, Any],  # noqa: ARG002
+    ) -> dict[str, Any]:
         data = self.change_decimal_dump(data)
         if data.get("first_transaction_date"):
             data["first_transaction_date"] = int(

@@ -1,7 +1,8 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import Any, Union
+from typing import Any
 
+import pytz
 from loguru import logger
 
 from app.external.models import Wallet
@@ -11,11 +12,12 @@ from app.services.price_service import PriceService
 
 
 class DolfiCalculator:
-    def __init__(self):
+    def __init__(self) -> None:
         self.blockchain = BlockchainService()
         self.prices = PriceService()
         self.tx_schema = TransactionSchema()
         self.wallet_schema = WalletSchema()
+        self.timezone = pytz.timezone("America/Sao_Paulo")
 
     def get_wallet_info(self, address: str) -> dict[str, Any] | None:
         """Get wallet info from the blockchain API"""
@@ -40,12 +42,10 @@ class DolfiCalculator:
             "tx_count", None
         )
         has_new = current_tx_count > wallet.transaction_count
-        if has_new:
-            return True
-        return False
+        return bool(has_new)
 
     def calculate_btc_price_change(
-        self, btc_today: Decimal, first_tx_dt: Union[int, float]
+        self, btc_today: Decimal, first_tx_dt: float
     ) -> Decimal:
         """Calculate the percentage change in Bitcoin price"""
         btc_before = self.prices.get_bitcoin_price(first_tx_dt)
@@ -58,14 +58,13 @@ class DolfiCalculator:
     def calculate_roa(
         invested_usd: Decimal, balance_usd: Decimal, returned_usd: Decimal
     ) -> Decimal:
-        """'Calculate the Return on Assets (ROA)"""
+        """Calculate the Return on Assets (ROA)"""
         if invested_usd > 0:
-            roa = (
+            return (
                 (balance_usd + returned_usd - invested_usd)
                 / invested_usd
                 * 100
             )
-            return roa
         logger.warning(f"ROA zerado: invested_usd = {invested_usd}")
         return Decimal("0")
 
@@ -201,7 +200,7 @@ class DolfiCalculator:
             "tx_count", len(processed_txs)
         )
         current_price = self.prices.get_bitcoin_price(
-            datetime.now().timestamp()
+            datetime.now(tz=self.timezone).timestamp()
         )
         balance_btc, balance_usd = self.get_balances(
             wallet_info, current_price
@@ -238,7 +237,7 @@ class DolfiCalculator:
                 returned_usd += abs(tx.balance_usd)
 
         current_price = self.prices.get_bitcoin_price(
-            datetime.now().timestamp()
+            datetime.now(tz=self.timezone).timestamp()
         )
         balance_usd = balance_btc * current_price
         roa = self.calculate_roa(invested_usd, balance_usd, returned_usd)

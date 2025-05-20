@@ -1,6 +1,5 @@
 from datetime import datetime
 from decimal import Decimal
-from typing import List
 
 from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
@@ -27,7 +26,7 @@ class Wallet(db.Model):
         Numeric(18, 3), default=0
     )
     first_transaction_date: Mapped[datetime] = mapped_column(nullable=False)
-    transactions: Mapped[List["Transaction"]] = relationship(
+    transactions: Mapped[list["Transaction"]] = relationship(
         "Transaction", back_populates="wallet", cascade="all, delete-orphan"
     )
 

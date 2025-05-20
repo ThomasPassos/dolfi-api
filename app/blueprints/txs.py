@@ -1,3 +1,5 @@
+from collections.abc import Sequence
+
 from flask import current_app
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
@@ -28,22 +30,22 @@ class Txs(MethodView):
     )
     @require_api_key
     @cache.memoize(timeout=600)
-    def get(self, address: str, page: int):  # noqa: PLR6301
+    def get(self, address: str, page: int) -> Sequence[Transaction]:  # noqa: PLR6301
         """Pegar transações
 
         Retorna 20 transações de uma wallet específica"""
         current_app.logger.debug(
             f"Pegando as txs da carteira: {address}, página {page}"
         )
-        N_PER_PAGE = 20
-        offset = (page - 1) * N_PER_PAGE
+        n_per_page = 20
+        offset = (page - 1) * n_per_page
         try:
             txs = db.session.scalars(
                 select(Transaction)
                 .filter_by(wallet_address=address)
                 .order_by(Transaction.transaction_date.desc())
                 .offset(offset)
-                .limit(N_PER_PAGE)
+                .limit(n_per_page)
             ).all()
         except SQLAlchemyError as e:
             current_app.logger.error(
@@ -73,7 +75,7 @@ class LastTxs(MethodView):
     )
     @require_api_key
     @cache.memoize(timeout=600)
-    def get(self):  # noqa: PLR6301
+    def get(self) -> Sequence[Transaction]:  # noqa: PLR6301
         """Pegar últimas transações
 
         Retorna as 10 últimas transações da base de dados."""

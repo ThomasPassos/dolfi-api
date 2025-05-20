@@ -4,7 +4,7 @@ from loguru import logger
 
 
 class InterceptHandler(logging.Handler):
-    def emit(self, record):  # noqa: PLR6301
+    def emit(self, record) -> None:  # noqa: ANN001, PLR6301
         try:
             level = logger.level(record.levelname).name
         except KeyError:

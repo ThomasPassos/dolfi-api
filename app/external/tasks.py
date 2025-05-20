@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Any
 
 from celery import chain, chord, group, shared_task
 from loguru import logger
@@ -51,11 +52,11 @@ def update_wallet(address: str) -> dict[str, str]:
         return {"message": f"Atualização da carteira {address} iniciada"}
     except Exception as e:
         logger.error(f"Falha ao atualizar carteira {address}: {e}")
-        raise Exception
+        raise e
 
 
 @shared_task
-def start_processing(new_txs: list, address: str):
+def start_processing(new_txs: list, address: str) -> dict[str, str] | None:
     try:
         logger.debug("Iniciando processamento das transações")
         chord(process_transaction.s(tx, address) for tx in new_txs)(
@@ -68,7 +69,7 @@ def start_processing(new_txs: list, address: str):
 
 
 @shared_task
-def recalculate_wallet(address: str):
+def recalculate_wallet(address: str) -> dict[str, bool] | None:
     logger.debug(f"recalculando wallet {address}")
     wallet = db.session.get(Wallet, address)
     if wallet:
@@ -92,7 +93,7 @@ def recalculate_wallet(address: str):
 
 
 @shared_task
-def get_new_txs(address: str):
+def get_new_txs(address: str) -> list[dict[str, Any]] | dict[str, str]:
     logger.debug(f"pegando novas transações da wallet {address}")
     try:
         wallet = db.session.get(Wallet, address)
@@ -113,7 +114,7 @@ def get_new_txs(address: str):
 
 
 @shared_task
-def load_new_txs(new_txs: list, address: str):
+def load_new_txs(new_txs: list, address: str) -> None:
     logger.debug(
         f"Carregando na base de dados as novas transações: {len(new_txs)}"
     )
@@ -139,7 +140,7 @@ def load_new_txs(new_txs: list, address: str):
 
 
 @shared_task
-def process_transaction(tx, address) -> dict:
+def process_transaction(tx: dict[str, Any], address: str) -> dict[str, Any]:
     tx_date = int(tx["status"]["block_time"])
     btc_price = calc.prices.get_bitcoin_price(tx_date)
 

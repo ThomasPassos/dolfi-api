@@ -2,9 +2,7 @@
 name = "d0lfi"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "Thomas Passos",email = "tm123br@live.com"}
-]
+authors = [{ name = "Thomas Passos", email = "tm123br@live.com" }]
 readme = "README.md"
 requires-python = ">=3.12,<4.0"
 dependencies = [
@@ -25,7 +23,8 @@ dependencies = [
     "celery (>=5.5.2,<6.0.0)",
     "flower (>=2.0.1,<3.0.0)",
     "flask-migrate (>=4.1.0,<5.0.0)",
-    "flask-smorest (>=0.46.1,<0.47.0)"
+    "flask-smorest (>=0.46.1,<0.47.0)",
+    "pyright (>=1.1.400,<2.0.0)",
 ]
 
 [build-system]
@@ -38,7 +37,6 @@ package-mode = false
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.11.2"
 taskipy = "^1.14.1"
-mypy = "^1.15.0"
 pre-commit = "^4.2.0"
 bandit = "^1.8.3"
 pytest = "^8.3.5"
@@ -50,16 +48,40 @@ types-requests = "^2.32.0.20250328"
 types-flask = "^1.1.6"
 celery-types = "^0.23.0"
 types-flask-migrate = "^4.1.0.20250112"
-types-smorest = "^1.1.2"
 
 [tool.ruff]
 line-length = 79
-extend-exclude = ['static']
+extend-exclude = ['migrations']
 
 [tool.ruff.lint]
 preview = true
 ignore = ["PLR2004", "PLC0415"]
-select = ["I", "F", "E", "W", "PL"]
+select = [
+    "ANN",
+    "A",
+    "C4",
+    "DTZ",
+    "PIE",
+    "T20",
+    "B",
+    "PYI",
+    "PT",
+    "RET",
+    "SIM",
+    "ARG",
+    "PTH",
+    "FLY",
+    "C90",
+    "PERF",
+    "N", 
+    "UP",
+    "TC",
+    "I",
+    "F",
+    "E",
+    "W",
+    "PL",
+]
 
 [tool.ruff.format]
 preview = true
@@ -67,8 +89,8 @@ quote-style = "double"
 
 [tool.taskipy.tasks]
 run = "flask run"
-lint = "ruff check . ; ruff check . --diff"
-format = "ruff check . --fix ; ruff format ."
+lint = "ruff check app ; ruff check . --diff"
+format = "ruff check app --fix ; ruff format ."
 commit = "git add . ; git commit -a -m"
 build = "sudo docker build -t dolfi ."
 dkrun = "sudo docker run -p 5000:5000 --env-file .flaskenv dolfi"
@@ -83,8 +105,5 @@ get_all = "chttp DELETE http://127.0.0.1:5000/all X-Api-Key:BbfvrpJnSYJocYY#KrHT
 delete = "http DELETE http://127.0.0.1:5000/34piq2XmS3shJR3UTo8YuKkTrPZjrTTiZ8 X-Api-Key:BbfvrpJnSYJocYY#KrHTgUrb*4tfy*4PvB3ZNdz2huaZgz49gG"
 update = "http UPDATE http://127.0.0.1:5000/update X-Api-Key:BbfvrpJnSYJocYY#KrHTgUrb*4tfy*4PvB3ZNdz2huaZgz49gG"
 
-[tool.mypy]
-python_version = "3.12"
-disable_error_code = "name-defined"
-explicit_package_bases = true
+[tool.pyright]
 exclude = ["migrations"]

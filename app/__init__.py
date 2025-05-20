@@ -8,7 +8,7 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 from config import Config
 
 
-def create_app(config_object=Config):
+def create_app(config_object: object = Config) -> Flask:
     load_dotenv()
 
     app = Flask(__name__)

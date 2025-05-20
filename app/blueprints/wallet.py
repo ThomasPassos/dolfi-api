@@ -1,3 +1,6 @@
+from collections.abc import Sequence
+from typing import Any, Literal
+
 from flask import current_app, jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
@@ -36,7 +39,7 @@ class AllWallets(MethodView):
     )
     @require_api_key
     @cache.memoize(timeout=600)
-    def get(self):  # noqa: PLR6301
+    def get(self) -> Sequence[Wallet]:  # noqa: PLR6301
         """Pegar todas wallets
 
         Retorna todas as wallets registradas no banco de dados."""
@@ -59,7 +62,7 @@ class Wallets(MethodView):
     )
     @require_api_key
     @cache.memoize(timeout=600)
-    def get(self, address: str):  # noqa: PLR6301
+    def get(self, address: str) -> Wallet:  # noqa: PLR6301
         """Pegar wallet
 
         Retorna a wallet que possui o endereço passado na URL."""
@@ -79,7 +82,7 @@ class Wallets(MethodView):
         example={"message": "Carteira inserida e dados calculados."},
         headers=header,
     )
-    def post(self, address: str):  # noqa: PLR6301
+    def post(self, address: str) -> tuple[Any, Literal[201]]:  # noqa: PLR6301
         """Adicionar wallet
 
         Adiciona uma nova wallet e suas transações ao banco de dados."""
@@ -133,7 +136,7 @@ class Wallets(MethodView):
         example={"message": "Carteira {address} removida."},
         headers=header,
     )
-    def delete(self, address: str):  # noqa: PLR6301
+    def delete(self, address: str) -> tuple[Any, Literal[200]]:  # noqa: PLR6301
         """Excluir wallet
 
         Exclui uma wallet e suas transações do banco de dados."""

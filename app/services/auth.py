@@ -1,5 +1,7 @@
 import os
+from collections.abc import Callable
 from functools import wraps
+from typing import Any
 
 from flask import request
 from flask_smorest import abort
@@ -13,9 +15,9 @@ header = {
 }
 
 
-def require_api_key(f):
+def require_api_key(f: Callable) -> Callable:
     @wraps(f)
-    def decorated(*args, **kwargs):
+    def decorated(*args: tuple, **kwargs: dict[str, Any]) -> object:
         api_key = request.headers.get("X-API-Key")
         expected_key = os.getenv("API_KEY")
 
