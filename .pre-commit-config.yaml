@@ -9,12 +9,12 @@ repos:
     hooks:
       - id: ruff-check
         name: ruff-check
-        entry: poetry run ruff check . --fix --extend-exclude=migrations
+        entry: poetry run ruff check --extend-exclude=migrations . --fix 
         language: system
         types: [python]
       - id: ruff-format
         name: ruff-format
-        entry: poetry run ruff format . --extend-exclude=migrations
+        entry: poetry run ruff format . 
         language: system
         types: [python]
       - id: bandit
