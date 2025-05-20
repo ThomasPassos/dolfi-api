@@ -51,7 +51,7 @@ types-flask-migrate = "^4.1.0.20250112"
 
 [tool.ruff]
 line-length = 79
-extend-exclude = ['migrations']
+extend-exclude = ["migrations"]
 
 [tool.ruff.lint]
 preview = true
@@ -89,8 +89,8 @@ quote-style = "double"
 
 [tool.taskipy.tasks]
 run = "flask run"
-lint = "ruff check app ; ruff check . --diff"
-format = "ruff check app --fix ; ruff format ."
+lint = "ruff check . ; ruff check . --diff"
+format = "ruff check . --fix ; ruff format ."
 commit = "git add . ; git commit -a -m"
 build = "sudo docker build -t dolfi ."
 dkrun = "sudo docker run -p 5000:5000 --env-file .flaskenv dolfi"
