@@ -9,7 +9,7 @@ repos:
     hooks:
       - id: ruff-check
         name: ruff-check
-        entry: poetry run ruff check . --extend-exclude migrations --fix 
+        entry: poetry run ruff check . --extend-exclude migrations/*.py --fix 
         language: system
         types: [python]
       - id: ruff-format
