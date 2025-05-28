@@ -73,7 +73,7 @@ select = [
     "FLY",
     "C90",
     "PERF",
-    "N", 
+    "N",
     "UP",
     "TC",
     "I",
@@ -90,6 +90,7 @@ quote-style = "double"
 [tool.taskipy.tasks]
 run = "flask run"
 lint = "ruff check . ; ruff check . --diff"
+type = "pyright ."
 format = "ruff check . --fix ; ruff format ."
 commit = "git add . ; git commit -a -m"
 build = "sudo docker build -t dolfi ."
