@@ -1,5 +1,6 @@
 import pytest
-from flask import Flask
+from flask import Flask, Response
+from flask.testing import FlaskClient
 
 from app import create_app
 
@@ -15,5 +16,5 @@ def app() -> Flask:
 
 
 @pytest.fixture
-def client(app: Flask):  # noqa: ANN201
+def client(app: Flask) -> FlaskClient[Response]:
     return app.test_client()
