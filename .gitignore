@@ -297,3 +297,4 @@ pyrightconfig.json
 .flaskenv
 .ruff_cache/
 mypy_errors.txt
+.vscode
