@@ -19,7 +19,7 @@ bp = Blueprint(
 )
 
 
-@bp.route("/<string:address>/<page:int>")
+@bp.route("/<string:address>/<int:page>")
 class Txs(MethodView):
     @bp.response(
         200,
