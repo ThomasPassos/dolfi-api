@@ -61,7 +61,7 @@ class Txs(MethodView):
         return txs
 
 
-@bp.route("/last_txs")
+@bp.route("/last")
 class LastTxs(MethodView):
     @bp.response(
         200,
