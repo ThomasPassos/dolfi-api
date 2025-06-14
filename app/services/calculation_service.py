@@ -61,10 +61,8 @@ class DolfiCalculator:
         """Calculate the Return on Assets (ROA)"""
         if invested_usd > 0:
             return (
-                (balance_usd + returned_usd - invested_usd)
-                / invested_usd
-                * 100
-            )
+                (balance_usd + returned_usd - invested_usd) / invested_usd
+            ) * 100
         logger.warning(f"ROA zerado: invested_usd = {invested_usd}")
         return Decimal("0")
 
