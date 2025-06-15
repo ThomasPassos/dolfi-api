@@ -6,10 +6,10 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.external.models import Wallet, db
-from app.services.calculation_service import DolfiCalculator
+from app.data.calculation import Calculator
+from app.data.models import Wallet, db
 
-calc = DolfiCalculator()
+calc = Calculator()
 
 
 @shared_task

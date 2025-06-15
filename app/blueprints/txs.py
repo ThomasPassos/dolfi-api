@@ -3,13 +3,14 @@ from collections.abc import Sequence
 from flask import current_app
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.external.cache import cache
-from app.external.models import Transaction, db
-from app.external.schemas import TransactionSchema
-from app.services.auth import header, require_api_key
+from app.controllers.txs.last_txs import LastTxsController
+from app.controllers.txs.txs import TxsController
+from app.data.auth import header, require_api_key
+from app.data.models import Transaction, db
+from app.data.schemas import TransactionSchema
+from app.external.extensions.cache import cache
 
 bp = Blueprint(
     "transaction",
@@ -21,6 +22,9 @@ bp = Blueprint(
 
 @bp.route("/<string:address>/<int:page>")
 class Txs(MethodView):
+    def __init__(self) -> None:
+        self.controller = TxsController(db)
+
     @bp.response(
         200,
         TransactionSchema(many=True),
@@ -37,16 +41,8 @@ class Txs(MethodView):
         current_app.logger.debug(
             f"Pegando as txs da carteira: {address}, página {page}"
         )
-        n_per_page = 20
-        offset = (page - 1) * n_per_page
         try:
-            txs = db.session.scalars(
-                select(Transaction)
-                .filter_by(wallet_address=address)
-                .order_by(Transaction.transaction_date.desc())
-                .offset(offset)
-                .limit(n_per_page)
-            ).all()
+            txs = self.controller.get_txs(address, page)
         except SQLAlchemyError as e:
             current_app.logger.error(
                 f"Erro ao pegar as txs da wallet {address}:\n{e}"
@@ -63,6 +59,9 @@ class Txs(MethodView):
 
 @bp.route("/last")
 class LastTxs(MethodView):
+    def __init__(self) -> None:
+        self.controller = LastTxsController(db)
+
     @bp.response(
         200,
         TransactionSchema(
@@ -81,11 +80,7 @@ class LastTxs(MethodView):
         Retorna as 10 últimas transações da base de dados."""
         current_app.logger.debug("Retornando as 10 últimas txs")
         try:
-            txs = db.session.scalars(
-                select(Transaction)
-                .order_by(Transaction.transaction_date.desc())
-                .limit(10)
-            ).all()
+            txs = self.controller.get_last_txs()
             current_app.logger.debug(
                 "10 últimas transações retornadas com sucesso"
             )

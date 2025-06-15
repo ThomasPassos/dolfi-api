@@ -4,14 +4,14 @@ from typing import Any, Literal
 from flask import current_app, jsonify
 from flask.views import MethodView
 from flask_smorest import Blueprint, abort
-from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.external.cache import cache
-from app.external.models import Wallet, db
-from app.external.schemas import WalletSchema
-from app.services.auth import header, require_api_key
-from app.services.calculation_service import DolfiCalculator
+from app.controllers.wallets.all_wallets import AllWalletsCtroller
+from app.controllers.wallets.wallet import WalletController
+from app.data.auth import header, require_api_key
+from app.data.models import Wallet, db
+from app.data.schemas import WalletSchema
+from app.external.extensions.cache import cache
 
 bp = Blueprint(
     "wallet",
@@ -23,6 +23,9 @@ bp = Blueprint(
 
 @bp.route("/all")
 class AllWallets(MethodView):
+    def __init__(self) -> None:
+        self.controller = AllWalletsCtroller(db)
+
     @bp.response(
         200,
         WalletSchema(
@@ -44,7 +47,7 @@ class AllWallets(MethodView):
 
         Retorna todas as wallets registradas no banco de dados."""
         current_app.logger.debug("Pegando todas as wallets")
-        wallets = db.session.scalars(select(Wallet)).all()
+        wallets = self.controller.get_all_wallets()
         if not wallets:
             current_app.logger.warning("Não existem wallets salvas")
             abort(404, message="Carteiras não encontradas")
@@ -54,6 +57,9 @@ class AllWallets(MethodView):
 
 @bp.route("/<string:address>")
 class Wallets(MethodView):
+    def __init__(self) -> None:
+        self.controller = WalletController(db)
+
     @bp.response(
         200,
         WalletSchema(exclude=("transactions",)),
@@ -67,7 +73,7 @@ class Wallets(MethodView):
 
         Retorna a wallet que possui o endereço passado na URL."""
         current_app.logger.debug(f"Pegando os dados da wallet: {address}")
-        wallet = db.session.get(Wallet, address)
+        wallet = self.controller.find_wallet(address)
         if not wallet:
             current_app.logger.warning(
                 f"Requisição de wallet não existente: {address}"
@@ -87,35 +93,15 @@ class Wallets(MethodView):
 
         Adiciona uma nova wallet e suas transações ao banco de dados."""
         current_app.logger.info(f"Adição da carteira {address} iniciada!")
-        wallet = db.session.get(Wallet, address)
+
+        wallet = self.controller.find_wallet(address)
         if wallet:
             current_app.logger.warning(f"Carteira {address} já existe!")
             abort(400, message="Carteira já cadastrada")
 
-        calc_service = DolfiCalculator()
-        wallet_data, tx_list = calc_service.calculate_wallet_data(address)
-
-        if wallet_data is None:
-            current_app.logger.warning(
-                f"Falha ao obter dados da carteira {address}!"
-            )
-            abort(500, message="Falha ao obter dados da carteira.")
-
-        wallet = calc_service.wallet_schema.load(
-            wallet_data,
-            session=db.session,  # type: ignore
-        )
-        transactions = []
-        if tx_list:
-            transactions = [
-                calc_service.tx_schema.load(tx, session=db.session)  # type: ignore
-                for tx in tx_list
-            ]
-
+        controller = WalletController(db)
         try:
-            db.session.add(wallet)
-            db.session.add_all(transactions)
-            db.session.commit()
+            controller.insert_wallet_and_txs(address)
         except SQLAlchemyError as e:
             current_app.logger.error(
                 f"Falha ao inserir carteira {address} no banco de dados:\n{e}"
@@ -141,15 +127,14 @@ class Wallets(MethodView):
 
         Exclui uma wallet e suas transações do banco de dados."""
         current_app.logger.info(f"Exclusão de carteira {address} iniciada!")
-        wallet = db.session.get(Wallet, address)
+        wallet = self.controller.find_wallet(address)
         if not wallet:
             current_app.logger.warning(
                 f"Carteira {address} não encontrada para exclusão!"
             )
             abort(404, message="Carteira não encontrada.")
         try:
-            db.session.delete(wallet)
-            db.session.commit()
+            self.controller.delete_wallet(wallet)
             current_app.logger.info(f"Carteira {address} excluída!")
             return jsonify({"message": f"Carteira {address} removida."}), 200
         except SQLAlchemyError as e:

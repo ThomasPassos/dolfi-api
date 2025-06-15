@@ -15,7 +15,7 @@ def create_app(config_object: object = Config) -> Flask:
     if config_object:
         app.config.from_object(config_object)
 
-    from app.external.logging import InterceptHandler
+    from app.external.extensions.logging import InterceptHandler
 
     app.logger.handlers = [InterceptHandler()]
     if not app.debug:
@@ -25,21 +25,21 @@ def create_app(config_object: object = Config) -> Flask:
         app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1, x_prefix=1
     )
     # Inicialização das extensões
-    from app.external.models import db, migrate
+    from app.data.models import db, migrate
 
     db.init_app(app)
     migrate.init_app(app, db)
 
-    from app.external.cache import cache
+    from app.external.extensions.cache import cache
 
     cache.init_app(app)
 
-    from app.external.schemas import ma
+    from app.data.schemas import ma
 
     ma.init_app(app)
 
     # Inicialização do Celery
-    import app.external.celery as cl
+    import app.external.extensions.celery as cl
 
     cl.init_app(app)
 
