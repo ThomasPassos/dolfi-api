@@ -6,10 +6,10 @@ from loguru import logger
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.data.calculation import Calculator
 from app.data.models import Wallet, db
+from app.data.wallet import WalletGenerator
 
-calc = Calculator()
+calc = WalletGenerator()
 
 
 @shared_task
@@ -73,14 +73,8 @@ def recalculate_wallet(address: str) -> dict[str, bool] | None:
     logger.debug(f"recalculando wallet {address}")
     wallet = db.session.get(Wallet, address)
     if wallet:
-        wallet_data = calc.recalculate_wallet_data(wallet)
-        calc.wallet_schema.load(
-            wallet_data,
-            instance=wallet,
-            partial=True,
-            session=db.session,  # type: ignore
-        )
-        logger.debug(f"recalculando wallet data {wallet_data}")
+        wallet = calc.recalculate_wallet_data(wallet)
+        logger.debug(f"recalculando wallet data {wallet}")
         try:
             db.session.commit()
             logger.debug(f"Dados calculados da wallet {wallet.address}")
@@ -121,7 +115,7 @@ def load_new_txs(new_txs: list, address: str) -> None:
     wallet = db.session.get(Wallet, address)
     if wallet:
         wallet.transaction_count += len(new_txs)
-        transactions = calc.tx_schema.load(
+        transactions = calc.txs_gen.schema.load(
             new_txs,
             session=db.session,  # type: ignore
             many=True,

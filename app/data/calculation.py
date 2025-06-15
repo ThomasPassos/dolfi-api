@@ -13,7 +13,7 @@ class Calculator:
     def __init__(self) -> None:
         self.prices = PriceService()
         self.tx_schema = TransactionSchema()
-        self.wallet_schema = WalletSchema()
+        self.schema = WalletSchema()
         self.timezone = pytz.timezone("America/Sao_Paulo")
 
     def calculate_btc_price_change(self, first_tx_dt: float) -> Decimal:

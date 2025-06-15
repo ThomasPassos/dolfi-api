@@ -95,33 +95,30 @@ class WalletGenerator:
         complete_wallet = self.complete_wallet(wallet, txs)
         return complete_wallet, txs
 
-    # def recalculate_wallet_data(self, wallet: Wallet) -> dict[str, Any]:
-    #     """Recalcula os dados da carteira com base nas
-    #     transações e preços mais recentes"""
+    def recalculate_wallet_data(self, wallet: Wallet) -> Wallet:
+        """Recalcula os dados da carteira com base nas
+        transações e preços mais recentes"""
+        balance_btc = Decimal("0")
+        invested_usd = Decimal("0")
+        returned_usd = Decimal("0")
 
-    #     for tx in wallet.transactions:
-    #         balance_btc += tx.balance_btc
-    #         if tx.balance_btc > 0:
-    #             invested_usd += abs(tx.balance_usd)
-    #         else:
-    #             returned_usd += abs(tx.balance_usd)
+        for tx in wallet.transactions:
+            balance_btc += tx.balance_btc
+            if tx.balance_btc > 0:
+                invested_usd += abs(tx.balance_usd)
+            else:
+                returned_usd += abs(tx.balance_usd)
 
-    #     current_price = self.prices.get_bitcoin_price(
-    #         datetime.now(tz=self.timezone).timestamp()
-    #     )
-    #     balance_usd = balance_btc * current_price
-    #     roa = self.calculate_roa(invested_usd, balance_usd, returned_usd)
-    #     btc_price_change = self.calculate_btc_price_change(
-    #         wallet.first_transaction_date.timestamp()
-    #     )
-
-    #     return {
-    #         "balance_btc": balance_btc,
-    #         "balance_usd": balance_usd,
-    #         "btc_price_change": btc_price_change,
-    #         "roa": roa,
-    #         "transaction_count": len(wallet.transactions),
-    #     }
+        wallet.balance_btc = balance_btc
+        wallet.balance_usd = self.get_balance_usd(balance_btc)
+        wallet.roa = self.calc.calculate_roa(
+            invested_usd, wallet.balance_usd, returned_usd
+        )
+        wallet.btc_price_change = self.calc.calculate_btc_price_change(
+            wallet.first_transaction_date.timestamp()
+        )
+        wallet.transaction_count = len(wallet.transactions)
+        return wallet
 
     @staticmethod
     def get_balance_btc(
