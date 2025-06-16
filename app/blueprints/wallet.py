@@ -146,7 +146,7 @@ class Wallets(MethodView):
             abort(500, message="Erro ao deletar a carteira.")
 
 
-@bp.route("/<string:address>/<days:int>")
+@bp.route("/<string:address>/<int:days>")
 class WalletTemporal(MethodView):
     def __init__(self) -> None:
         self.controller = WalletTemporalController(db)
@@ -154,7 +154,7 @@ class WalletTemporal(MethodView):
     @bp.response(
         200,
         WalletSchema(
-            include=(
+            only=(
                 "address",
                 "roa",
                 "btc_price_change",

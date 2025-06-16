@@ -26,8 +26,8 @@ class Wallet(db.Model):
         Numeric(18, 3), default=0
     )
     first_transaction_date: Mapped[datetime] = mapped_column(
-        default=datetime(2025, 3, 18),
-        nullable=False,  # noqa: DTZ001
+        default=datetime(2025, 3, 18),  # noqa: DTZ001
+        nullable=False,
     )
     transactions: Mapped[list["Transaction"]] = relationship(
         "Transaction", back_populates="wallet", cascade="all, delete-orphan"
