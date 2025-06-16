@@ -18,12 +18,18 @@ migrate = Migrate()
 class Wallet(db.Model):
     __tablename__ = "wallet"
     address: Mapped[str] = mapped_column(primary_key=True)
-    balance_btc: Mapped[Decimal] = mapped_column(Numeric(18, 8), default=0)
-    balance_usd: Mapped[Decimal] = mapped_column(Numeric(18, 2), default=0)
+    balance_btc: Mapped[Decimal] = mapped_column(
+        Numeric(18, 8, asdecimal=False), default=0
+    )
+    balance_usd: Mapped[Decimal] = mapped_column(
+        Numeric(18, 2, asdecimal=False), default=0
+    )
     transaction_count: Mapped[int] = mapped_column(default=0)
-    roa: Mapped[Decimal] = mapped_column(Numeric(18, 3), default=0)
+    roa: Mapped[Decimal] = mapped_column(
+        Numeric(18, 3, asdecimal=False), default=0
+    )
     btc_price_change: Mapped[Decimal] = mapped_column(
-        Numeric(18, 3), default=0
+        Numeric(18, 3, asdecimal=False), default=0
     )
     first_transaction_date: Mapped[datetime] = mapped_column(
         default=datetime(2025, 3, 18),  # noqa: DTZ001
@@ -43,8 +49,12 @@ class Transaction(db.Model):
     transaction_date: Mapped[datetime] = mapped_column(
         nullable=False, index=True
     )
-    balance_btc: Mapped[Decimal] = mapped_column(Numeric(18, 8), default=0)
-    balance_usd: Mapped[Decimal] = mapped_column(Numeric(18, 2), default=0)
+    balance_btc: Mapped[Decimal] = mapped_column(
+        Numeric(18, 8, asdecimal=False), default=0
+    )
+    balance_usd: Mapped[Decimal] = mapped_column(
+        Numeric(18, 2, asdecimal=False), default=0
+    )
     is_incoming: Mapped[bool] = mapped_column(default=True)
     percent_from_wallet: Mapped[float] = mapped_column(default=0)
     wallet: Mapped["Wallet"] = relationship(

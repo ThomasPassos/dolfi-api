@@ -42,7 +42,7 @@ class WalletTemporalController:
             "roa": roa,
             "btc_price_change": btc_price_change,
         }
-        return self.schema.load(parcial_wallet)
+        return self.schema.load(parcial_wallet, transient=True)
 
     def calculate_date(self, days: int) -> datetime:
         today = datetime.now(tz=self.tz)

@@ -61,10 +61,10 @@ class WalletGenerator:
         parcial_wallet = {
             "address": address,
             "balance_btc": balance_btc,
-            "tx_count": tx_count,
+            "transaction_count": tx_count,
             "balance_usd": balance_usd,
         }
-        return self.schema.load(parcial_wallet)
+        return self.schema.load(parcial_wallet, transient=True)
 
     def complete_wallet(
         self, wallet: Wallet, txs: list[Transaction]
@@ -94,7 +94,10 @@ class WalletGenerator:
 
         txs = self.txs_gen.generate_transactions(address)
         complete_wallet = self.complete_wallet(wallet, txs)
-        return complete_wallet, txs
+        complete_txs = [
+            self.txs_gen.complete_transaction(tx, wallet) for tx in txs
+        ]
+        return complete_wallet, complete_txs
 
     def recalculate_wallet_data(self, wallet: Wallet) -> Wallet:
         """Recalcula os dados da carteira com base nas

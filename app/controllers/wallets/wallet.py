@@ -21,5 +21,5 @@ class WalletController:
     def insert_wallet_and_txs(self, address: str) -> None:
         wallet, txs = self.wallet_gen.generate_wallet_and_txs(address)
         self.db.session.add(wallet)
-        self.db.session.add(txs)
-        self.db.commit()
+        self.db.session.add_all(txs)
+        self.db.session.commit()

@@ -49,7 +49,7 @@ class TxsGenerator:
                 "is_incoming": is_incoming,
                 "transaction_id": tx.get("txid"),
             }
-            return self.schema.load(tx_raw)
+            return self.schema.load(tx_raw, transient=True)
         except Exception as e:
             logger.error(
                 f"""Erro no processamento da transação {tx.get("txid")}
