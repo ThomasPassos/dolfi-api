@@ -6,7 +6,7 @@ from sqlalchemy import select
 from app.data.models import Wallet
 
 
-class AllWalletsCtroller:
+class AllWalletsController:
     def __init__(self, db: SQLAlchemy) -> None:
         self.db = db
 

@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from datetime import datetime
 from decimal import Decimal
 from typing import Any
@@ -144,7 +145,7 @@ class WalletGenerator:
 
     @staticmethod
     def calculate_invested_and_returned(
-        txs: list[Transaction],
+        txs: list[Transaction] | Sequence[Transaction],
     ) -> tuple[Decimal, Decimal]:
         invested_usd = Decimal("0")
         returned_usd = Decimal("0")
