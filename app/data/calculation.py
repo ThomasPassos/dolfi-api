@@ -19,7 +19,7 @@ class Calculator:
     def calculate_btc_price_change(self, first_tx_dt: float) -> Decimal:
         """Calculate the percentage change in Bitcoin price"""
         btc_today = self.prices.get_bitcoin_price(
-            datetime.now(tz=self.timezone)
+            datetime.now(tz=self.timezone).timestamp()
         )
         btc_before = self.prices.get_bitcoin_price(first_tx_dt)
         if btc_before == 0:

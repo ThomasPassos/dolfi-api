@@ -1,3 +1,4 @@
+from decimal import Decimal
 from typing import Any
 
 from flask_marshmallow import Marshmallow
@@ -17,13 +18,21 @@ class TransactionSchema(ma.SQLAlchemyAutoSchema):
 
     transaction_date = fields.DateTime(format="timestamp")
 
-    @post_dump
     @staticmethod
+    def decimal_to_float(data: dict[str, Any]) -> dict[str, Any]:
+        for key, value in data.items():
+            if isinstance(value, Decimal):
+                data[key] = float(value)
+        return data
+
+    @post_dump
     def format_json(
+        self,
         data: dict[str, Any],
-        *args: tuple,  # noqa: ARG004
-        **kwargs: dict[str, Any],  # noqa: ARG004
+        *args: tuple,  # noqa: ARG002
+        **kwargs: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
+        data = self.decimal_to_float(data)
         data["transaction_date"] = int(data["transaction_date"])
         return data
 
@@ -39,13 +48,21 @@ class WalletSchema(ma.SQLAlchemyAutoSchema):
         TransactionSchema, many=True, exclude=("wallet_address",)
     )
 
-    @post_dump
     @staticmethod
+    def decimal_to_float(data: dict[str, Any]) -> dict[str, Any]:
+        for key, value in data.items():
+            if isinstance(value, Decimal):
+                data[key] = float(value)
+        return data
+
+    @post_dump
     def format_json(
+        self,
         data: dict[str, Any],
-        *args: tuple,  # noqa: ARG004
-        **kwargs: dict[str, Any],  # noqa: ARG004
+        *args: tuple,  # noqa: ARG002
+        **kwargs: dict[str, Any],  # noqa: ARG002
     ) -> dict[str, Any]:
+        data = self.decimal_to_float(data)
         if data.get("first_transaction_date"):
             data["first_transaction_date"] = int(
                 data["first_transaction_date"]

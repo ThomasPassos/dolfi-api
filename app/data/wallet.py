@@ -74,12 +74,16 @@ class WalletGenerator:
         logger.debug(f"Completando wallet {wallet.address}")
 
         wallet.first_transaction_date = min(tx.transaction_date for tx in txs)
+
         invested, returned = self.calculate_invested_and_returned(txs)
+
+        print(invested, returned)
+
         wallet.roa = self.calc.calculate_dietz(
             Decimal(0), wallet.balance_usd, invested, returned
         )
         wallet.btc_price_change = self.calc.calculate_btc_price_change(
-            wallet.first_transaction_date  # type: ignore
+            wallet.first_transaction_date.timestamp()
         )
 
         logger.debug(f"Wallet {wallet.address} completada: {wallet}")
@@ -150,8 +154,8 @@ class WalletGenerator:
     def calculate_invested_and_returned(
         txs: list[Transaction] | Sequence[Transaction],
     ) -> tuple[Decimal, Decimal]:
-        invested_usd = Decimal("0")
-        returned_usd = Decimal("0")
+        invested_usd = Decimal(0)
+        returned_usd = Decimal(0)
 
         for tx in txs:
             if tx.balance_btc > 0:

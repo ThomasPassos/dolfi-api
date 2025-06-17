@@ -24,6 +24,9 @@ class PriceService:
         try:
             r = requests.get(CRYPTOCOMPARE_API_URL, params=params, timeout=10)
             r.raise_for_status()
+            response = r.json()
+            if response.get("Response", None):
+                logger.error(f"Erro na CC API: {response}")
             price = r.json().get("BTC", {}).get("USD", 0)
             return Decimal(price)
         except requests.RequestException as e:
