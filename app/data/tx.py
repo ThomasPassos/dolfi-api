@@ -65,5 +65,5 @@ class TxsGenerator:
 
     @staticmethod
     def complete_transaction(tx: Transaction, wallet: Wallet) -> Transaction:
-        tx.percent_from_wallet = float(tx.balance_usd / wallet.balance_usd)
+        tx.percent_from_wallet = 10
         return tx

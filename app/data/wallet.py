@@ -77,7 +77,10 @@ class WalletGenerator:
 
         invested, returned = self.calculate_invested_and_returned(txs)
 
-        print(invested, returned)
+        logger.debug(
+            f"""investido: {invested}, retornado: {returned},
+            balanço: {wallet.balance_usd}"""
+        )
 
         wallet.roa = self.calc.calculate_dietz(
             Decimal(0), wallet.balance_usd, invested, returned
