@@ -8,7 +8,6 @@ from sqlalchemy.exc import SQLAlchemyError
 
 from app.controllers.wallets.all_wallets import AllWalletsController
 from app.controllers.wallets.wallet import WalletController
-from app.controllers.wallets.wallet_temporal import WalletTemporalController
 from app.data.auth import header, require_api_key
 from app.data.models import Wallet, db
 from app.data.schemas import WalletSchema
@@ -144,37 +143,3 @@ class Wallets(MethodView):
             )
             db.session.rollback()
             abort(500, message="Erro ao deletar a carteira.")
-
-
-@bp.route("/<string:address>/<int:days>")
-class WalletTemporal(MethodView):
-    def __init__(self) -> None:
-        self.controller = WalletTemporalController(db)
-
-    @bp.response(
-        200,
-        WalletSchema(
-            only=(
-                "address",
-                "roa",
-                "btc_price_change",
-                "transaction_count",
-            ),
-        ),
-        description="""Retorna os valores de uma wallet em um
-        período de tempo passado""",
-        headers=header,
-    )
-    @require_api_key
-    @cache.memoize(timeout=600)
-    def get(self, address: str, days: int) -> Wallet:
-        current_app.logger.debug(
-            f"Pegando os dados temporais de {days} dias da wallet: {address}"
-        )
-        wallet = self.controller.find_wallet(address)
-        if not wallet:
-            current_app.logger.warning(
-                f"Requisição de wallet não existente: {address}"
-            )
-            abort(404, message="Carteira não encontrada")
-        return self.controller.generate_temporal_wallet(wallet, days)

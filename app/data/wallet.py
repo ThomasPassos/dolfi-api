@@ -94,10 +94,7 @@ class WalletGenerator:
 
         txs = self.txs_gen.generate_transactions(address)
         complete_wallet = self.complete_wallet(wallet, txs)
-        complete_txs = [
-            self.txs_gen.complete_transaction(tx, wallet) for tx in txs
-        ]
-        return complete_wallet, complete_txs
+        return complete_wallet, txs
 
     def recalculate_wallet_data(self, wallet: Wallet) -> Wallet:
         """Recalcula os dados da carteira com base nas

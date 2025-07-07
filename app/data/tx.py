@@ -4,7 +4,7 @@ import pytz
 from loguru import logger
 
 from app.data.calculation import Calculator
-from app.data.models import Transaction, Wallet
+from app.data.models import Transaction
 from app.data.schemas import TransactionSchema
 from app.external.apis.blockchain import BlockchainService
 from app.external.apis.btc_exchange import PriceService
@@ -62,8 +62,3 @@ class TxsGenerator:
         """Process all transactions and return invested and returned USD
         amounts, along with processed transactions"""
         return [self.process_transaction(tx, address) for tx in txs if tx]  # type: ignore
-
-    @staticmethod
-    def complete_transaction(tx: Transaction, wallet: Wallet) -> Transaction:
-        tx.percent_from_wallet = 10
-        return tx
