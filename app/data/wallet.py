@@ -74,16 +74,9 @@ class WalletGenerator:
         logger.debug(f"Completando wallet {wallet.address}")
 
         wallet.first_transaction_date = min(tx.transaction_date for tx in txs)
-
         invested, returned = self.calculate_invested_and_returned(txs)
-
-        logger.debug(
-            f"""investido: {invested}, retornado: {returned},
-            balanço: {wallet.balance_usd}"""
-        )
-
-        wallet.roa = self.calc.calculate_dietz(
-            Decimal(0), wallet.balance_usd, invested, returned
+        wallet.roa = self.calc.calculate_roa(
+            invested, wallet.balance_usd, returned
         )
         wallet.btc_price_change = self.calc.calculate_btc_price_change(
             wallet.first_transaction_date.timestamp()
@@ -122,8 +115,8 @@ class WalletGenerator:
 
         wallet.balance_btc = balance_btc
         wallet.balance_usd = self.get_balance_usd(balance_btc)
-        wallet.roa = self.calc.calculate_dietz(
-            Decimal(0), wallet.balance_usd, invested_usd, returned_usd
+        wallet.roa = self.calc.calculate_roa(
+            invested_usd, wallet.balance_usd, returned_usd
         )
         wallet.btc_price_change = self.calc.calculate_btc_price_change(
             wallet.first_transaction_date.timestamp()

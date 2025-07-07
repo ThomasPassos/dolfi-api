@@ -28,6 +28,18 @@ class Calculator:
         return ((btc_today / btc_before) - 1) * 100
 
     @staticmethod
+    def calculate_roa(
+        invested_usd: Decimal, balance_usd: Decimal, returned_usd: Decimal
+    ) -> Decimal:
+        """Calculate the Return on Assets (ROA)"""
+        if invested_usd > 0:
+            return (
+                (balance_usd + returned_usd - invested_usd) / invested_usd
+            ) * 100
+        logger.warning(f"ROA zerado: invested_usd = {invested_usd}")
+        return Decimal("0")
+
+    @staticmethod
     def calculate_tx_total_spent(tx: dict[str, Any], address: str) -> Decimal:
         """Calculate the total amount spent in a transaction"""
         total_spent = Decimal("0")
@@ -53,15 +65,3 @@ class Calculator:
                     Decimal(str(vout.get("value", 0))) / satoshi_to_btc
                 )
         return total_received
-
-    @staticmethod
-    def calculate_dietz(
-        initial_value: Decimal,
-        final_value: Decimal,
-        invested: Decimal,
-        returned: Decimal,
-    ) -> Decimal:
-        flux = invested - returned
-        first_term = final_value - initial_value - flux
-        second_term = initial_value + (flux / 2)
-        return (first_term / second_term) * 100
