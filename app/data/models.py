@@ -46,7 +46,6 @@ class Transaction(db.Model):
     balance_btc: Mapped[Decimal] = mapped_column(Numeric(18, 8), default=0)
     balance_usd: Mapped[Decimal] = mapped_column(Numeric(18, 2), default=0)
     is_incoming: Mapped[bool] = mapped_column(default=True)
-    percent_from_wallet: Mapped[float] = mapped_column(default=0)
     wallet: Mapped["Wallet"] = relationship(
         "Wallet", back_populates="transactions"
     )
